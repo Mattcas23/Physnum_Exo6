@@ -39,9 +39,15 @@ void triangular_solve(vector<T> const& diag,  vector<T> const& lower, vector<T> 
 }
 
 // TODO Potentiel V(x) :
-double V()
+double V(double xa, double xL, double xR, double xb, double m, double w0, double x, double V0, const double PI)
 {
-    return 0;
+    if(x<=xa && x>=xL ){
+        return 0.5*m*pow(w0*(x-xa)/(xL-xa),2);
+    }else if (x>xa || x<xb){
+        return V0*pow(sin((x-xa)*PI/(xb-xa)),2);
+    }else {
+        return 0.5*m*pow(w0*(x-xb)/(xR-xb),2);
+    }
 }
 
 // Declaration des diagnostiques de la particule d'apres sa fonction d'onde psi :
@@ -54,14 +60,44 @@ double V()
 
 
 // TODO: calculer la probabilite de trouver la particule dans un intervalle [x_i, x_j]
-double prob()
-{
-    return 0;
+double prob(function<complex<double>(double, double)> psi, double t, double dx, double x_i, double x_j) {
+    double probability = 0.0;
+    double N = (x_j - x_i)/dx;
+    for (int i = 0; i < N; ++i) {
+        double x = x_i + i * dx;
+        complex<double> psi_val = psi(x, t);
+        double prob_density = norm(psi_val); // |psi|^2 = norm()
+
+        probability += prob_density * dx;
+    }
+
+    return probability;
 }
 
 // TODO calculer l'energie
-double E(){
-    return 0;
+double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t,double xL,double xR,int N = 1000){
+
+// Define complex type for wave function
+using cdouble = complex<double>;
+
+// Function to numerically integrate expected value of H
+
+{
+    double dx = (xR - xL) / N;
+    double result = 0.0;
+
+    for (int i = 0; i < N+1; ++i) {
+        double x = xL + i * dx;
+        cdouble psi_val = psi(x, t);
+        cdouble psi_conj = conj(psi_val);
+        double h_val = H(x);
+
+        result += real(psi_conj * h_val * psi_val) * dx;
+    }
+
+    return result;
+}
+
 }
 
 // TODO calculer xmoyenne
