@@ -41,7 +41,6 @@ void triangular_solve(vector<T> const& diag,  vector<T> const& lower, vector<T> 
 /// TODO Potentiel V(x) :
 double V(double xa, double xL, double xR, double xb, double m, double w0, double x, double V0, const double PI)
 {
-
     if(x<=xa and x>=xL ){
         return 0.5*m*pow(w0*(x-xa)/(xL-xa),2);
     }else if (x>xa and x<xb){
@@ -51,6 +50,7 @@ double V(double xa, double xL, double xR, double xb, double m, double w0, double
     }
 }
 
+
 // Declaration des diagnostiques de la particule d'apres sa fonction d'onde psi :
 //  - prob: calcule la probabilite de trouver la particule dans un intervalle [x_i, x_j]
 //  - E:    calcule son energie,
@@ -59,12 +59,14 @@ double V(double xa, double xL, double xR, double xb, double m, double w0, double
 //  - pmoy: calcule sa quantite de mouvement moyenne,
 //  - p2moy:calcule sa quantite de mouvement au carre moyenne.
 
+// Attention ! : contrôler tous les indices dans les sommes 
 
 /// TODO: calculer la probabilite de trouver la particule dans un intervalle [x_i, x_j]
 double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 {
 	double integ = 0. ; 
-	for ( size_t k(i) ; k < j - 2 ; ++k )
+	
+	for ( size_t k(i) ; k < j - 1 ; ++k )
 	{ integ += ( pow(norm(psi[k]),2) + pow(norm(psi[k+1]),2) ); }	
 	integ *= (dx/2.) ; 
 	
@@ -72,28 +74,9 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t,double xL,double xR,int N = 1000){
-
-// Define complex type for wave function
-using cdouble = complex<double>;
-
-// Function to numerically integrate expected value of H
-
-{
-    double dx = (xR - xL) / N;
-    double result = 0.0;
-
-    for (int i = 0; i < N+1; ++i) {
-        double x = xL + i * dx;
-        cdouble psi_val = psi(x, t);
-        cdouble psi_conj = conj(psi_val);
-        double h_val = H(x);
-
-        result += real(psi_conj * h_val * psi_val) * dx;
-    }
-
-    return result;
-}
+double E(){
+	
+	return 0. ; 
 }
 
 /// TODO calculer xmoyenne
@@ -254,7 +237,7 @@ main(int argc, char** argv)
     // supérieures et inférieures
     for (int i(0); i < Npoints; ++i) // Boucle sur les points de maillage
     {
-        dH[i] = ( - 2. * psi[i] ) / pow(dx,2) + V(x[i],xa,xb,xL,xR,V0,om0) ;
+        dH[i] = ( - 2. * psi[i] ) / pow(dx,2) + V(xa,xL,xR,xb,m,om0,x[i],V0,PI) ;
         dA[i] = 1. + complex_i * dt * dH[i] / ( 2. * hbar ) ;
         dB[i] = 1. - complex_i * dt * dH[i] / ( 2. * hbar ) ;
     }
@@ -281,7 +264,7 @@ main(int argc, char** argv)
     ofstream fichier_potentiel((output + "_pot.out").c_str());
     fichier_potentiel.precision(15);
     for (int i(0); i < Npoints; ++i)
-        fichier_potentiel << x[i] << " " << V() << endl;
+        fichier_potentiel << x[i] << " " << V(xa,xL,xR,xb,m,om0,x[i],V0,PI) << endl;
     fichier_potentiel.close();
 
     ofstream fichier_psi((output + "_psi2.out").c_str());
@@ -299,7 +282,7 @@ main(int argc, char** argv)
     // Ecriture des observables :
     /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     ///       en accord avec la façon dont vous les aurez programmés plus haut
-    fichier_observables << t << " " << prob() << " " << prob()
+    fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices 
                 << " " << E() << " " << xmoy (psi,x,dx) << " "  
                 << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
@@ -328,7 +311,7 @@ main(int argc, char** argv)
         // Ecriture des observables :
 	/// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
 	///       en accord avec la façon dont vous les aurez programmés plus haut
-        fichier_observables << t << " " << prob() << " " << prob()
+        fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // Attenzione ! Controllare gli indici ! 
                     << " " << E() << " " << xmoy (psi,x,dx) << " "  
                     << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
