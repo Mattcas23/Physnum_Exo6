@@ -74,27 +74,9 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t,double xL,double xR,int N = 1000){
-
-// Define complex type for wave function
-using cdouble = complex<double>;
-
-// Function to numerically integrate expected value of H
-
-{
-    double dx = (xR - xL) / N;
-    double result = 0.0;
-
-    for (int i = 0; i < N+1; ++i) {
-        double x = xL + i * dx;
-        cdouble psi_val = psi(x, t);
-        cdouble psi_conj = conj(psi_val);
-        double h_val = H(x);
-
-        result += real(psi_conj * h_val * psi_val) * dx;
-    }
-
-    return result;
+double E(){
+	
+	return 0. ; 
 }
 
 /// TODO calculer xmoyenne
@@ -255,24 +237,34 @@ main(int argc, char** argv)
     // supérieures et inférieures
     for (int i(0); i < Npoints; ++i) // Boucle sur les points de maillage
     {
-        dH[i] = ( - 2. * psi[i] ) / pow(dx,2) + V(xa,xL,xR,xb,m,om0,x[i],V0,PI) ;
-        dA[i] = 1. + complex_i * dt * dH[i] / ( 2. * hbar ) ;
-        dB[i] = 1. - complex_i * dt * dH[i] / ( 2. * hbar ) ;
+		complex<double> bi = complex_i * dt * V(xa,xL,xR,xb,m,om0,x[i],V0,PI) / (2.*hbar) ; 
+		
+		if ( i == 0 or i == Npoints-1){ dH[i] = 1. ; }
+        else { dH[i] = ( psi[i+1] - 2. * psi[i] + psi[i-1] ) / pow(dx,2) + V(xa,xL,xR,xb,m,om0,x[i],V0,PI) ; }
+        dA[i] = 1. + a + bi ; 
+        dB[i] = 1. - a - bi ; 
+        
     }
     for (int i(0); i < Nintervals; ++i) // Boucle sur les intervalles
     {
         aH[i] = -1.;
-        aA[i] = 1. + complex_i * dt * aH[i] / ( 2. * hbar );
-        aB[i] = 1. - complex_i * dt * aH[i] / ( 2. * hbar );
+        aA[i] = -a ; 
+        aB[i] =  a ; 
         cH[i] = -1 ;
-        cA[i] = 1. + complex_i * dt * cH[i] / ( 2. * hbar );
-        cB[i] = 1. - complex_i * dt * cH[i] / ( 2. * hbar );
+        cA[i] = -a ;  
+        cB[i] =  a ;   
     }
 
     // Conditions aux limites: psi nulle aux deux bords
     /// TODO: Modifier les matrices A et B pour satisfaire les conditions aux limites
 
-
+	// voir slides 34 Week 10 
+	dH[0]   = 1. ; dA[0] = 1. ; dB[0] = 1. ;
+	dH[-1]  = 1. ; dA[-1] = 1. ; dB[-1] = 1. ;
+	aH[0]  = 0. ;  aA[0] = 0.  ; aB[0] = 0.;
+	aH[-1] = 0. ;  aA[-1] = 0. ; aB[-1] = 0.;
+	cH[0]  = 0. ;  cA[0] = 0.  ; cB[0] = 0.;
+	cH[-1] = 0. ;  cA[-1] = 0. ; cB[-1] = 0.;
 
 
 
