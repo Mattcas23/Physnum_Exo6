@@ -38,16 +38,10 @@ void triangular_solve(vector<T> const& diag,  vector<T> const& lower, vector<T> 
     }
 }
 
-// TODO Potentiel V(x) :
-double V(double xa, double xL, double xR, double xb, double m, double w0, double x, double V0, const double PI)
+/// TODO Potentiel V(x) :
+double V( double x ,  double xa , double xb , double xL , double xR , double V0 , double om0 )
 {
-    if(x<=xa && x>=xL ){
-        return 0.5*m*pow(w0*(x-xa)/(xL-xa),2);
-    }else if (x>xa || x<xb){
-        return V0*pow(sin((x-xa)*PI/(xb-xa)),2);
-    }else {
-        return 0.5*m*pow(w0*(x-xb)/(xR-xb),2);
-    }
+    return 0;
 }
 
 // Declaration des diagnostiques de la particule d'apres sa fonction d'onde psi :
@@ -59,22 +53,18 @@ double V(double xa, double xL, double xR, double xb, double m, double w0, double
 //  - p2moy:calcule sa quantite de mouvement au carre moyenne.
 
 
-// TODO: calculer la probabilite de trouver la particule dans un intervalle [x_i, x_j]
-double prob(function<complex<double>(double, double)> psi, double t, double dx, double x_i, double x_j) {
-    double probability = 0.0;
-    double N = (x_j - x_i)/dx;
-    for (int i = 0; i < N; ++i) {
-        double x = x_i + i * dx;
-        complex<double> psi_val = psi(x, t);
-        double prob_density = norm(psi_val); // |psi|^2 = norm()
-
-        probability += prob_density * dx;
-    }
-
-    return probability;
+/// TODO: calculer la probabilite de trouver la particule dans un intervalle [x_i, x_j]
+double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
+{
+	double integ = 0. ; 
+	for ( size_t k(i) ; k < j - 2 ; ++k )
+	{ integ += ( pow(norm(psi[k]),2) + pow(norm(psi[k+1]),2) ); }	
+	integ *= (dx/2.) ; 
+	
+    return integ;
 }
 
-// TODO calculer l'energie
+/// TODO calculer l'energie
 double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t,double xL,double xR,int N = 1000){
 
 // Define complex type for wave function
@@ -97,37 +87,72 @@ using cdouble = complex<double>;
 
     return result;
 }
-
 }
 
-// TODO calculer xmoyenne
-double xmoy()
+/// TODO calculer xmoyenne
+double xmoy(vec_cmplx const & psi , vector<double> const & x , double dx )
 {
-    return 0;
+	double integ = 0. ; 
+	for ( size_t k(0) ; k < psi.size() - 2 ; ++k )	
+	{ integ += ( ( pow(norm(psi[k]),2) + pow(norm(psi[k+1]),2) ) * (x[k]+x[k+1])  ) ; }
+	integ *= (dx/2.) ; // on met dx/2 en évidence dans la somme 
+	
+    return integ;
 }
 
-// TODO calculer x.^2 moyenne
-double x2moy()
+/// TODO calculer x.^2 moyenne
+double x2moy(vec_cmplx const & psi , vector<double> const & x , double dx )
 {
-    return 0;
+	double integ = 0. ; 
+	for ( size_t k(0) ; k < psi.size() - 2 ; ++k )	
+	{ integ += ( pow(norm(psi[k]),2) + pow(norm(psi[k+1]),2) * (pow(x[k],2)+pow(x[k+1],2)) ) ; }
+	integ *= (dx/2.) ; // on met dx/2 en évidence dans la somme 
+	
+    return integ;
 }
 
-// TODO calculer p moyenne
-double pmoy()
+/// TODO calculer p moyenne
+double pmoy(vec_cmplx const & psi , double dx , double hbar)
 {
-    return 0;
+	complex<double> complex_i = complex<double>(0, 1); // Nombre imaginaire i
+	size_t N(psi.size()-1) ; // dernier indice de l'array psi
+	
+	complex<double> integ = 0. ; 
+	for ( size_t k(1) ; k < psi.size() - 3 ; ++k ) // on ne prend pas les valeurs aux bords donc 1 et -3 
+	{ integ += ( conj(psi[k]) * (psi[k+1] - psi[k-1]) / (2.*dx) + conj(psi[k+1]) * (psi[k+2]-psi[k]) / (2.*dx) ) ;}
+	
+	integ += psi[0]*( psi[0] + psi[1] ) / dx +  psi[1]* (psi[0]+psi[2]) / (2.*dx) ; // bord gauche (différences finies à gauche) page 200 
+	integ += psi[N]*( psi[N] + psi[N-1]) / dx +  psi[N-1]* (psi[N] + psi[N-2]) / (2.*dx) ; // bord droit  (différences finies à droite) page 200
+	
+	integ *= ( - complex_i * hbar * dx/2. ) ; // on met ihdx/2 en évidence dans la somme (trapèze)
+	
+    return real(integ);
 }
 
-// TODO calculer p.^2 moyenne
-double p2moy()
-{
-    return 0;
+/// TODO calculer p.^2 moyenne
+double p2moy(vec_cmplx const & psi , double dx , double hbar)
+{	
+	complex<double> integ = 0. ; 
+	for ( size_t k(1) ; k < psi.size() - 3 ; ++k ) // on ne prend pas les valeurs aux bords donc 1 et -3 
+	{ integ += ( conj(psi[k]) * (psi[k+1] - 2.*psi[k] + psi[k-1]) / pow(dx,2) + conj(psi[k+1]) * (psi[k+2] - 2.*psi[k+1] + psi[k]) / pow(dx,2) ) ;}
+	
+	// on ne rajoute rien pour les deux bords car 0 ( voir indication ) 
+	
+	integ *= ( - pow(hbar,2) * dx / 2. ) ; // on met ihdx/2 en évidence dans la somme (trapèze)
+	
+    return real(integ);
 }
 
-// TODO calculer la normalization
+/// TODO calculer la normalization
 vec_cmplx normalize(vec_cmplx const& psi, double const& dx)
 {
     vec_cmplx psi_norm(psi.size());
+    
+    psi_norm = psi ; 
+    
+    for ( auto & el : psi_norm ) // on passe par référence 
+    { el /= prob(psi,dx,1,psi.size()) ; }
+    
     return psi_norm;
 }
 
@@ -173,8 +198,10 @@ main(int argc, char** argv)
     int Nsteps = configFile.get<int>("Nsteps");
     int Nintervals = configFile.get<int>("Nintervals");
 
-    // TODO: initialiser le paquet d'onde, equation (4.116) du cours
-    double k0 = 1;
+
+	double L = xR - xL ; // ajouté 
+    /// TODO: initialiser le paquet d'onde, equation (4.116) du cours
+    double k0 = 2. * PI * n / L ;
 
     int Npoints = Nintervals + 1;
     double dx = (xR - xL) / Nintervals;
@@ -194,10 +221,10 @@ main(int argc, char** argv)
     double t = 0;
     unsigned int Nx0 = floor((0 - xL)/(xR-xL)*Npoints); //chosen xR*0.5 since top of potential is at half x domain
   
-    // TODO initialize psi
+    /// TODO initialize psi
     for (int i(0); i < Npoints; ++i)
-    	psi[i] = 1;
-   
+    { psi[i] = exp( complex_i * k0 * x[i] ) * exp( - 0.5 * pow((x[i] - x0),2) / pow(sigma0,2) ) ; }
+       
     // Modifications des valeurs aux bords :
     psi[0] = complex<double>(0., 0.);
     psi[Npoints - 1] = complex<double>(0., 0.);
@@ -215,27 +242,27 @@ main(int argc, char** argv)
     complex<double> a =
       complex_i * hbar * dt / (4.*m*dx*dx); // Coefficient complexe a de l'equation (4.100)
 
-    // TODO: calculer les éléments des matrices A, B et H.
+    /// TODO: calculer les éléments des matrices A, B et H.
     // Ces matrices sont stockées sous forme tridiagonale, d:diagonale, c et a: diagonales
     // supérieures et inférieures
     for (int i(0); i < Npoints; ++i) // Boucle sur les points de maillage
     {
-        dH[i] = 1;
-        dA[i] = 1;
-        dB[i] = 1;
+        dH[i] = ( - 2. * psi[i] ) / pow(dx,2) + V(x[i],xa,xb,xL,xR,V0,om0) ;
+        dA[i] = 1. + complex_i * dt * dH[i] / ( 2. * hbar ) ;
+        dB[i] = 1. - complex_i * dt * dH[i] / ( 2. * hbar ) ;
     }
     for (int i(0); i < Nintervals; ++i) // Boucle sur les intervalles
     {
-        aH[i] = 0;
-        aA[i] = 0;
-        aB[i] = 0;
-        cH[i] = 0;
-        cA[i] = 0;
-        cB[i] = 0;
+        aH[i] = -1.;
+        aA[i] = 1. + complex_i * dt * aH[i] / ( 2. * hbar );
+        aB[i] = 1. - complex_i * dt * aH[i] / ( 2. * hbar );
+        cH[i] = -1 ;
+        cA[i] = 1. + complex_i * dt * cH[i] / ( 2. * hbar );
+        cB[i] = 1. - complex_i * dt * cH[i] / ( 2. * hbar );
     }
 
     // Conditions aux limites: psi nulle aux deux bords
-    // TODO: Modifier les matrices A et B pour satisfaire les conditions aux limites
+    /// TODO: Modifier les matrices A et B pour satisfaire les conditions aux limites
 
 
 
@@ -247,7 +274,7 @@ main(int argc, char** argv)
     ofstream fichier_potentiel((output + "_pot.out").c_str());
     fichier_potentiel.precision(15);
     for (int i(0); i < Npoints; ++i)
-        fichier_potentiel << x[i] << " " <<V() << endl;
+        fichier_potentiel << x[i] << " " << V() << endl;
     fichier_potentiel.close();
 
     ofstream fichier_psi((output + "_psi2.out").c_str());
@@ -263,11 +290,11 @@ main(int argc, char** argv)
     fichier_psi << endl;
 
     // Ecriture des observables :
-    // TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
-    //       en accord avec la façon dont vous les aurez programmés plus haut
+    /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
+    ///       en accord avec la façon dont vous les aurez programmés plus haut
     fichier_observables << t << " " << prob() << " " << prob()
-                << " " << E() << " " << xmoy () << " "  
-                << x2moy() << " " << pmoy () << " " << p2moy() << endl; 
+                << " " << E() << " " << xmoy (psi,x,dx) << " "  
+                << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     // Boucle temporelle :    
     while (t < tfin) {
@@ -292,11 +319,11 @@ main(int argc, char** argv)
         fichier_psi << endl;
 
         // Ecriture des observables :
-	// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
-	//       en accord avec la façon dont vous les aurez programmés plus haut
+	/// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
+	///       en accord avec la façon dont vous les aurez programmés plus haut
         fichier_observables << t << " " << prob() << " " << prob()
-                    << " " << E() << " " << xmoy () << " "  
-                    << x2moy() << " " << pmoy () << " " << p2moy() << endl; 
+                    << " " << E() << " " << xmoy (psi,x,dx) << " "  
+                    << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     } // Fin de la boucle temporelle
 
