@@ -39,9 +39,16 @@ void triangular_solve(vector<T> const& diag,  vector<T> const& lower, vector<T> 
 }
 
 /// TODO Potentiel V(x) :
-double V( double x ,  double xa , double xb , double xL , double xR , double V0 , double om0 )
+double V(double xa, double xL, double xR, double xb, double m, double w0, double x, double V0, const double PI)
 {
-    return 0;
+
+    if(x<=xa and x>=xL ){
+        return 0.5*m*pow(w0*(x-xa)/(xL-xa),2);
+    }else if (x>xa or x<xb){
+        return V0*pow(sin((x-xa)*PI/(xb-xa)),2);
+    }else {
+        return 0.5*m*pow(w0*(x-xb)/(xR-xb),2);
+    }
 }
 
 // Declaration des diagnostiques de la particule d'apres sa fonction d'onde psi :
