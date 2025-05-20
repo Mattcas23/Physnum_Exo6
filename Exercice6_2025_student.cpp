@@ -44,7 +44,7 @@ double V(double xa, double xL, double xR, double xb, double m, double w0, double
 
     if(x<=xa and x>=xL ){
         return 0.5*m*pow(w0*(x-xa)/(xL-xa),2);
-    }else if (x>xa or x<xb){
+    }else if (x>xa and x<xb){
         return V0*pow(sin((x-xa)*PI/(xb-xa)),2);
     }else {
         return 0.5*m*pow(w0*(x-xb)/(xR-xb),2);
