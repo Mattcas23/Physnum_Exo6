@@ -74,9 +74,29 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E(){
-	
-	return 0. ; 
+double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t,double xL,double xR,int N = 1000){
+
+// Define complex type for wave function
+using cdouble = complex<double>;
+
+// Function to numerically integrate expected value of H
+
+{
+    double dx = (xR - xL) / N;
+    double result = 0.0;
+
+    for (int i = 0; i < N+1; ++i) {
+        
+        double x = xL + i * dx;
+        cdouble psi_val = psi(x, t);
+        cdouble psi_conj = conj(psi_val);
+        double h_val = H(x);
+
+        result += real(psi_conj * h_val * psi_val) * dx;
+    }
+
+    return result;
+}
 }
 
 /// TODO calculer xmoyenne
@@ -293,7 +313,7 @@ main(int argc, char** argv)
     /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     ///       en accord avec la façon dont vous les aurez programmés plus haut
     fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices 
-                << " " << E() << " " << xmoy (psi,x,dx) << " "  
+                << " " << E(psi,) << " " << xmoy (psi,x,dx) << " "  
                 << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     // Boucle temporelle :    
