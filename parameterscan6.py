@@ -53,32 +53,32 @@ pot = np.loadtxt(outputs[-1]+ "_pot.out")
 t = obs[0,:]
 x = pot[0,:]
 
+def ObsPlot ( nom_obs ) :
 
-def xmoy_t (obs) :
+    t = obs[:,0] # temps 
+    o = np.array([]) # observable 
 
-    t = obs[:,0]
-    xmoy = obs[:,4]
+    ylab = "" # ylabel 
+    
+    if ( nom_obs == "xmoy") : 
+        ylab = "$x_{moy}(t)$"
+        o = obs[:,4]
+    elif ( nom_obs == "x2moy") :
+        ylab = "$x_{moy}^2(t)$"
+        o = obs[:,5]
+    elif ( nom_obs == "pmoy") :
+        ylab = "$p_{moy}(t)$"
+        o = obs[:,6]
+    elif ( nom_obs == "p2moy") :
+        ylab = "$p_{moy}^2(t)$"
+        o = obs[:,7]
+    else :
+        ValueError("Le nom de l'observable doit être : ... ")
 
-    #for i in xmoy :
-        #print(i)
-    #for i in t :
-        #print(i)
-
-    #plt.scatter(1,1)
     plt.figure()
-    plt.plot(t,xmoy)
+    plt.plot(t,o,color="black")
     plt.xlabel("Temps [s]", fontsize = fs)
-    plt.ylabel("$x_{moy}(t)$", fontsize = fs)
-
-def pmoy_t (obs) :
-
-    t = obs[:,0]
-    pmoy = obs[:,6]
-
-    plt.figure()
-    plt.plot(t,pmoy)
-    plt.xlabel("Temps [s]", fontsize = fs)
-    plt.ylabel("$p_{moy}(t)$", fontsize = fs)
+    plt.ylabel(ylab , fontsize = fs)        
 
 def Vplot(pot) :
 
@@ -94,14 +94,22 @@ def ColorPlot (obs,psi,pot) :
 
     t = obs[:,0]
     x = pot[:,0]
-    abs_ = psi[:,0]
 
+    absidx = np.arange(start = 0 , stop = len(x), step = 3)
+    
+    abs_ = psi[[absidx],0]
+
+    print(t.shape)
+    print(x.shape)
+    print(abs_.shape)
+    
+    
     plt.pcolor(x,t,abs_)
     
 
     print(psi.shape)
 
-xmoy_t(obs)
-pmoy_t(obs)
+ObsPlot("xmoy")
+#ColorPlot(obs,psi2,pot)
 plt.show()
 
