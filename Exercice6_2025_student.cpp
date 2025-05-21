@@ -74,7 +74,7 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t, vector<double> const & x, double dx, size_t i, size_t j){
+double E( vec_cmplx const & psi,vec_cmplx const &  H,double t, vector<double> const & x, double dx, size_t i, size_t j){
 
 // Define complex type for wave function
 using cdouble = complex<double>;
@@ -85,9 +85,9 @@ using cdouble = complex<double>;
     double result = 0.0;
 
     for (size_t k(i) ; k< j-1; ++k) {
-        cdouble psi_val = psi(x[k], t);
+        cdouble psi_val = psi[k];
         cdouble psi_conj = conj(psi_val);
-        double h_val = H(x[k]);
+        cdouble h_val = H[k];
 
         result += real(psi_conj * h_val * psi_val) * dx;
     }
@@ -257,17 +257,17 @@ main(int argc, char** argv)
 		complex<double> bi = complex_i * dt * V(xa,xL,xR,xb,m,om0,x[i],V0,PI) / (2.*hbar) ; 
 		
 		if ( i == 0 or i == Npoints-1){ dH[i] = 1. ; }
-        else { dH[i] = ( psi[i+1] - 2. * psi[i] + psi[i-1] ) / pow(dx,2) + V(xa,xL,xR,xb,m,om0,x[i],V0,PI) ; }
+        else { dH[i] = 2.*pow(hbar,2) / (2.*m*pow(dx,2)) + V(xa,xL,xR,xb,m,om0,x[i],V0,PI) ; }
         dA[i] = 1. + a + bi ; 
         dB[i] = 1. - a - bi ; 
         
     }
     for (int i(0); i < Nintervals; ++i) // Boucle sur les intervalles
     {
-        aH[i] = -1.;
+        aH[i] =  - 1.*pow(hbar,2) / (2.*m*pow(dx,2)) ;
         aA[i] = -a ; 
         aB[i] =  a ; 
-        cH[i] = -1 ;
+        cH[i] =  - 1.*pow(hbar,2) / (2.*m*pow(dx,2)) ;
         cA[i] = -a ;  
         cB[i] =  a ;   
     }
@@ -310,7 +310,7 @@ main(int argc, char** argv)
     /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     ///       en accord avec la façon dont vous les aurez programmés plus haut
     fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices 
-                << " " << E(psi,) << " " << xmoy (psi,x,dx) << " "  
+                << " " << E(psi,dH,t,x,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
                 << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     // Boucle temporelle :    
@@ -339,7 +339,7 @@ main(int argc, char** argv)
 	/// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
 	///       en accord avec la façon dont vous les aurez programmés plus haut
         fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // Attenzione ! Controllare gli indici ! 
-                    << " " << E() << " " << xmoy (psi,x,dx) << " "  
+                    << " " << E(psi,dH,t,x,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
                     << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     } // Fin de la boucle temporelle
