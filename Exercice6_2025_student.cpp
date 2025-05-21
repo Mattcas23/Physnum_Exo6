@@ -74,7 +74,7 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E( vec_cmplx const & psi,vec_cmplx const &  H,double t, vector<double> const & x, double dx, size_t i, size_t j){
+complex<double> E( vec_cmplx const & psi,vec_cmplx const &  dH, vec_cmplx const &  aH, vec_cmplx const &  cH, double t, vector<double> const & x, double dx, size_t i, size_t j){
 
 // Define complex type for wave function
 using cdouble = complex<double>;
@@ -82,14 +82,16 @@ using cdouble = complex<double>;
 // Function to numerically integrate expected value of H
 
 {
-    double result = 0.0;
+    cdouble result1= 0.0;
+    cdouble result2= 0.0;
+    cdouble result = 0.0;
+    vec_cmplx psi_conj = psi;
 
     for (size_t k(i) ; k< j-1; ++k) {
-        cdouble psi_val = psi[k];
-        cdouble psi_conj = conj(psi_val);
-        cdouble h_val = H[k];
-
-        result += real(psi_conj * h_val * psi_val) * dx;
+        psi_conj[k]=conj(psi[k]);
+        result1 = aH[i-1] * psi[i-1]+ dH[i] *psi[i] + cH[i+1] * psi[i+1];
+        result2= psi_conj[k]*result1;
+        result = dx*(result+result2)/2.0;
     }
 
     return result;
