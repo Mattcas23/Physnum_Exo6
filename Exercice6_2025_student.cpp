@@ -74,7 +74,7 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t,double xL,double xR,int N = 1000){
+double E( function<complex<double>(double, double)> psi,function<double(double)> H,double t, vector<double> const & x, double dx, size_t i, size_t j){
 
 // Define complex type for wave function
 using cdouble = complex<double>;
@@ -82,15 +82,12 @@ using cdouble = complex<double>;
 // Function to numerically integrate expected value of H
 
 {
-    double dx = (xR - xL) / N;
     double result = 0.0;
 
-    for (int i = 0; i < N+1; ++i) {
-        
-        double x = xL + i * dx;
-        cdouble psi_val = psi(x, t);
+    for (size_t k(i) ; k< j-1; ++k) {
+        cdouble psi_val = psi(x[k], t);
         cdouble psi_conj = conj(psi_val);
-        double h_val = H(x);
+        double h_val = H(x[k]);
 
         result += real(psi_conj * h_val * psi_val) * dx;
     }
