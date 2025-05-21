@@ -57,10 +57,12 @@ def ObsPlot ( nom_obs ) :
 
     t = obs[:,0] # temps 
     o = np.array([]) # observable 
-
     ylab = "" # ylabel 
-    
-    if ( nom_obs == "xmoy") : 
+
+    if ( nom_obs == "E") :
+        ylab = "$E$"
+        o = obs[:,3]        
+    elif ( nom_obs == "xmoy") : 
         ylab = "$x_{moy}(t)$"
         o = obs[:,4]
     elif ( nom_obs == "x2moy") :
@@ -90,26 +92,28 @@ def Vplot(pot) :
     plt.xlabel("x []", fontsize = fs)
     plt.ylabel("V", fontsize = fs)
 
+
 def ColorPlot (obs,psi,pot) : 
 
     t = obs[:,0]
     x = pot[:,0]
 
-    absidx = np.arange(start = 0 , stop = len(x), step = 3)
-    
-    abs_ = psi[[absidx],0]
+    absidx = np.arange(start = 0 , stop = psi.shape[1], step = 3)
 
-    print(t.shape)
-    print(x.shape)
-    print(abs_.shape)
-    
-    
-    plt.pcolor(x,t,abs_)
+    psi_abs = psi[:,absidx]
     
 
-    print(psi.shape)
 
-ObsPlot("xmoy")
-#ColorPlot(obs,psi2,pot)
+    plt.figure()
+    plt.pcolor(x,t,psi_abs)
+    plt.xlabel("x [m]", fontsize = fs)
+    plt.ylabel("Temps [s]", fontsize = fs)
+    cbar = plt.colorbar()
+    cbar.set_label("$|\\psi(x,t)|$", fontsize = fs)
+
+    
+
+ObsPlot("p2moy")
+ColorPlot(obs,psi2,pot)
 plt.show()
 
