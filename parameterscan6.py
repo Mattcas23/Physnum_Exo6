@@ -53,7 +53,9 @@ pot = np.loadtxt(outputs[-1]+ "_pot.out")
 t = obs[0,:]
 x = pot[0,:]
 
-def ObsPlot ( nom_obs ) :
+w0 = 100.0
+
+def ObsPlot ( nom_obs , analytique = False ) : # plot l'observable correspondante 
 
     t = obs[:,0] # temps 
     o = np.array([]) # observable 
@@ -84,7 +86,15 @@ def ObsPlot ( nom_obs ) :
         ValueError("Le nom de l'observable doit être : E , xmoy , x2moy , pmoy , p2moy ")
 
     plt.figure()
-    plt.plot(t,o,color="black")
+    plt.plot(t,o,color="black", label = "Quantique")
+
+    if (analytique and nom_obs == "xmoy") :
+        plt.plot( t ,  np.cos(w0*t) +  np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
+        plt.legend()
+    elif (analytique and nom_obs == "pmoy") :
+        plt.plot( t , w0*np.sin(w0*t) - w0*np.cos(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
+        plt.legend()
+        
     plt.xlabel("Temps [s]", fontsize = fs)
     plt.ylabel(ylab , fontsize = fs)        
 
@@ -95,33 +105,57 @@ def Vplot(pot) :
 
     plt.figure()
     plt.plot(x,V,color = "black")
-    plt.xlabel("x []", fontsize = fs)
+    plt.xlabel("x [m]", fontsize = fs)
     plt.ylabel("V", fontsize = fs)
 
+def Incertitude (obs) : # pour vérifier le principe d'incertitude d'Heisenberg
 
-def ColorPlot (obs,psi,pot) : 
+    t = obs[:,0]
+    Dx = np.sqrt(obs[:,5] - pow(obs[:,4],2)) # Delta x 
+    Dp = np.sqrt(obs[:,7] - pow(obs[:,6],2)) # Delta p 
+    DxDp = Dx*Dp 
+
+    plt.figure()
+    plt.plot(t,DxDp, color = "black")
+    plt.axhline(y = 0.5, color = "red", label = "$y = \\frac{\\hbar}{2}$") # ici on a pris des unités normalisées donc hbar = 1 (voir exercice p1)
+    plt.xlabel("Temps [s]", fontsize = fs)
+    plt.ylabel("$\\langle \\Delta x \\rangle \\langle \\Delta p \\rangle $", fontsize = fs)
+    plt.legend()
+
+def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle" / "imaginaire"
 
     t = obs[:,0]
     x = pot[:,0]
 
-    absidx = np.arange(start = 0 , stop = psi.shape[1], step = 3)
+    idx = np.array([])
+    leg = ""
 
-    psi_abs = psi[:,absidx]
+    if ( partie == "module" ) : 
+        idx = np.arange(start = 0 , stop = psi.shape[1], step = 3) # on choisit uniquement les indexes correspondant au module (voir c++)
+        leg = "$|\\psi(x,t)|$" # légende correspondante
+    elif ( partie == "reelle" ) :
+        idx = np.arange(start = 1 , stop = psi.shape[1], step = 3) # on choisit uniquement les indexes correspondant à la partie réelle (voir c++)
+        leg = "$Re[\\psi(x,t)]$" # légende correspondante
+    elif ( partie == "imaginaire" ) :
+        idx = np.arange(start = 2 , stop = psi.shape[1], step = 3) # on choisit uniquement les indexes correspondant à la partie réelle (voir c++)
+        leg = "$Im[\\psi(x,t)]$" # légende correspondante
+    else :
+        ValueError("partie = 'module' / 'reelle' / 'imaginaire'")
+
+    psi_val = psi[:,idx]
     
-
-
     plt.figure()
-    plt.pcolor(x,t,psi_abs)
+    plt.pcolor(x,t,psi_val)
     plt.xlabel("x [m]", fontsize = fs)
     plt.ylabel("Temps [s]", fontsize = fs)
     cbar = plt.colorbar()
-    cbar.set_label("$|\\psi(x,t)|$", fontsize = fs)
-
+    cbar.set_label(leg, fontsize = fs)
     
 
-ObsPlot("p2moy")
-ObsPlot("pmoy")
-Vplot(pot)
-ColorPlot(obs,psi2,pot)
+ObsPlot("pmoy", True)
+Incertitude(obs)
+#Vplot(pot)
+ColorPlot(obs,psi2,pot,"reelle")
+ObsPlot("xmoy",True)
 plt.show()
 
