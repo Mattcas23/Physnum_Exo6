@@ -57,9 +57,15 @@ def ObsPlot ( nom_obs ) :
 
     t = obs[:,0] # temps 
     o = np.array([]) # observable 
-    ylab = "" # ylabel 
+    ylab = "" # ylabel
 
-    if ( nom_obs == "E") :
+    if ( nom_obs == "prob_gauche") :
+        ylab = "$P_{gauche}$"
+        o = obs[:,1]   
+    elif ( nom_obs == "prob_droite") :
+        ylab = "$P_{droite}$"
+        o = obs[:,2]       
+    elif ( nom_obs == "E") :
         ylab = "$E$"
         o = obs[:,3]        
     elif ( nom_obs == "xmoy") : 
@@ -75,7 +81,7 @@ def ObsPlot ( nom_obs ) :
         ylab = "$p_{moy}^2(t)$"
         o = obs[:,7]
     else :
-        ValueError("Le nom de l'observable doit être : ... ")
+        ValueError("Le nom de l'observable doit être : E , xmoy , x2moy , pmoy , p2moy ")
 
     plt.figure()
     plt.plot(t,o,color="black")
@@ -88,7 +94,7 @@ def Vplot(pot) :
     V = pot[:,1]
 
     plt.figure()
-    plt.plot(x,V)
+    plt.plot(x,V,color = "black")
     plt.xlabel("x []", fontsize = fs)
     plt.ylabel("V", fontsize = fs)
 
@@ -114,6 +120,8 @@ def ColorPlot (obs,psi,pot) :
     
 
 ObsPlot("p2moy")
+ObsPlot("pmoy")
+Vplot(pot)
 ColorPlot(obs,psi2,pot)
 plt.show()
 
