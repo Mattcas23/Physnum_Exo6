@@ -67,14 +67,14 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 	double integ = 0. ; 
 	
 	for ( size_t k(i) ; k < j - 1 ; ++k )
-	{ integ += ( pow(norm(psi[k]),2) + pow(norm(psi[k+1]),2) ); }	
+	{ integ += ( norm(psi[k]) + norm(psi[k+1]) ); }	
 	integ *= (dx/2.) ; 
 	
-    return integ;
+    return sqrt(integ); // l'intégrale donne la probabilité au carré 
 }
 
 /// TODO calculer l'energie
-complex<double> E( vec_cmplx const & psi,vec_cmplx const &  dH, vec_cmplx const &  aH, vec_cmplx const &  cH, double t, vector<double> const & x, double dx, size_t i, size_t j){
+double E( vec_cmplx const & psi,vec_cmplx const &  H,double t, vector<double> const & x, double dx, size_t i, size_t j){
 
 // Define complex type for wave function
 using cdouble = complex<double>;
@@ -82,16 +82,14 @@ using cdouble = complex<double>;
 // Function to numerically integrate expected value of H
 
 {
-    cdouble result1= 0.0;
-    cdouble result2= 0.0;
-    cdouble result = 0.0;
-    vec_cmplx psi_conj = psi;
+    double result = 0.0;
 
     for (size_t k(i) ; k< j-1; ++k) {
-        psi_conj[k]=conj(psi[k]);
-        result1 = aH[i-1] * psi[i-1]+ dH[i] *psi[i] + cH[i+1] * psi[i+1];
-        result2= psi_conj[k]*result1;
-        result = dx*(result+result2)/2.0;
+        cdouble psi_val = psi[k];
+        cdouble psi_conj = conj(psi_val);
+        cdouble h_val = H[k];
+
+        result += real(psi_conj * h_val * psi_val) * dx;
     }
 
     return result;
@@ -102,8 +100,9 @@ using cdouble = complex<double>;
 double xmoy(vec_cmplx const & psi , vector<double> const & x , double dx )
 {
 	double integ = 0. ; 
-	for ( size_t k(0) ; k < psi.size() - 2 ; ++k )	
-	{ integ += ( ( pow(norm(psi[k]),2) + pow(norm(psi[k+1]),2) ) * (x[k]+x[k+1])  ) ; }
+	// cout << "psi size : " << (psi.size()-1) << endl ;  ; 
+	for ( size_t k(0) ; k < psi.size() - 1 ; ++k )	
+	{ integ += ( ( norm(psi[k])*x[k] + norm(psi[k+1])*x[k+1] ) ) ; } // norm retourne le module au carré // cout << "k : " << k << endl ;
 	integ *= (dx/2.) ; // on met dx/2 en évidence dans la somme 
 	
     return integ;
@@ -113,8 +112,8 @@ double xmoy(vec_cmplx const & psi , vector<double> const & x , double dx )
 double x2moy(vec_cmplx const & psi , vector<double> const & x , double dx )
 {
 	double integ = 0. ; 
-	for ( size_t k(0) ; k < psi.size() - 2 ; ++k )	
-	{ integ += ( pow(norm(psi[k]),2) + pow(norm(psi[k+1]),2) * (pow(x[k],2)+pow(x[k+1],2)) ) ; }
+	for ( size_t k(0) ; k < psi.size() - 1 ; ++k )	
+	{ integ += ( ( norm(psi[k])*(pow(x[k],2) + norm(psi[k+1])*pow(x[k+1],2)) ) ) ; } // vérifier 
 	integ *= (dx/2.) ; // on met dx/2 en évidence dans la somme 
 	
     return integ;
@@ -127,22 +126,22 @@ double pmoy(vec_cmplx const & psi , double dx , double hbar)
 	size_t N(psi.size()-1) ; // dernier indice de l'array psi
 	
 	complex<double> integ = 0. ; 
-	for ( size_t k(1) ; k < psi.size() - 3 ; ++k ) // on ne prend pas les valeurs aux bords donc 1 et -3 
-	{ integ += ( conj(psi[k]) * (psi[k+1] - psi[k-1]) / (2.*dx) + conj(psi[k+1]) * (psi[k+2]-psi[k]) / (2.*dx) ) ;}
+	for ( size_t k(1) ; k < psi.size() - 2 ; ++k ) // on ne prend pas les valeurs aux bords donc 1 et -3 
+	{ integ += ( conj(psi[k]) * (psi[k+1] - psi[k-1]) / (2.*dx) + conj(psi[k+1]) * (psi[k+2] - psi[k]) / (2.*dx) ) ;}
 	
-	integ += psi[0]*( psi[0] + psi[1] ) / dx +  psi[1]* (psi[0]+psi[2]) / (2.*dx) ; // bord gauche (différences finies à gauche) page 200 
-	integ += psi[N]*( psi[N] + psi[N-1]) / dx +  psi[N-1]* (psi[N] + psi[N-2]) / (2.*dx) ; // bord droit  (différences finies à droite) page 200
+	integ += conj(psi[0])*( psi[0] + psi[1] ) / dx +  conj(psi[1])*(psi[0]+psi[2]) / (2.*dx) ; // bord gauche (différences finies à gauche) page 200 
+	integ += conj(psi[N])*( psi[N] + psi[N-1]) / dx +  conj(psi[N-1])*( psi[N]+ psi[N-2] ) / (2.*dx) ; // bord droit  (différences finies à droite) page 200
 	
 	integ *= ( - complex_i * hbar * dx/2. ) ; // on met ihdx/2 en évidence dans la somme (trapèze)
 	
-    return real(integ);
+    return abs(integ);
 }
 
 /// TODO calculer p.^2 moyenne
 double p2moy(vec_cmplx const & psi , double dx , double hbar)
 {	
 	complex<double> integ = 0. ; 
-	for ( size_t k(1) ; k < psi.size() - 3 ; ++k ) // on ne prend pas les valeurs aux bords donc 1 et -3 
+	for ( size_t k(1) ; k < psi.size() - 2 ; ++k ) // on ne prend pas les valeurs aux bords donc 1 et -3 
 	{ integ += ( conj(psi[k]) * (psi[k+1] - 2.*psi[k] + psi[k-1]) / pow(dx,2) + conj(psi[k+1]) * (psi[k+2] - 2.*psi[k+1] + psi[k]) / pow(dx,2) ) ;}
 	
 	// on ne rajoute rien pour les deux bords car 0 ( voir indication ) 
@@ -156,12 +155,12 @@ double p2moy(vec_cmplx const & psi , double dx , double hbar)
 vec_cmplx normalize(vec_cmplx const& psi, double const& dx)
 {
     vec_cmplx psi_norm(psi.size());
-    
+        
     psi_norm = psi ; 
     
     for ( auto & el : psi_norm ) // on passe par référence 
-    { el /= prob(psi,dx,1,psi.size()) ; }
-    
+    { el /= prob(psi,dx,0,psi.size()) ; }
+        
     return psi_norm;
 }
 
@@ -311,7 +310,7 @@ main(int argc, char** argv)
     // Ecriture des observables :
     /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     ///       en accord avec la façon dont vous les aurez programmés plus haut
-    fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices 
+    fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices ( xa et 0 pour le premier prob et o et xb pour le deuxiüme prob ) 
                 << " " << E(psi,dH,t,x,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
                 << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
@@ -340,7 +339,7 @@ main(int argc, char** argv)
         // Ecriture des observables :
 	/// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
 	///       en accord avec la façon dont vous les aurez programmés plus haut
-        fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // Attenzione ! Controllare gli indici ! 
+        fichier_observables << t << " " << prob(psi,dx,0,psi.size()) << " " << prob(psi,dx,0,psi.size()) // Attenzione ! Controllare gli indici ! 
                     << " " << E(psi,dH,t,x,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
                     << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
