@@ -77,8 +77,11 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 double E( vec_cmplx const & psi, vec_cmplx const &  dH, vec_cmplx const & aH , vec_cmplx const &  cH , double dx)
 {
 	complex<double> integ = 0. ; 
+	
+	integ += conj(psi[0]) * ( cH[0]*psi[1] + dH[0]*psi[0] ) + conj(psi[1]) * ( cH[1]*psi[2] + dH[1]*psi[1] + aH[0]*psi[0] ) ; // bord gauche 
+	integ += conj(psi[-1]) * ( cH[-1]*psi[-2] + dH[-1]*psi[-1] ) + conj(psi[-2]) * ( cH[-1]*psi[-1] + dH[-2]*psi[-2] + aH[-2]*psi[-3] ) ; // bord droit 
 
-	for ( size_t i(1) ; i < psi.size() - 3 ; ++i ) // phi(x0) = phi(Xn) = 0 (conditions aux bords)
+	for ( size_t i(1) ; i < psi.size() - 3 ; ++i ) // 
 	{ 
 		complex<double> fi0 = conj(psi[i]) * ( aH[i]*psi[i-1] + dH[i]*psi[i] + cH[i]*psi[i+1] ) ; // f(x_i)
 		complex<double> fi1 = conj(psi[i+1]) * ( aH[i+1]*psi[i] + dH[i+1]*psi[i+1] + cH[i+1]*psi[i+2] ) ; // f(x_i+1)
@@ -86,21 +89,19 @@ double E( vec_cmplx const & psi, vec_cmplx const &  dH, vec_cmplx const & aH , v
 	}
 
 	integ*=(dx/2.) ; 
-	
 	return real(integ) ; 
-	
 }
 
 /// TODO calculer xmoyenne
 double xmoy(vec_cmplx const & psi , vector<double> const & x , double dx )
 {
-	double integ = 0. ; 
-	// cout << "psi size : " << (psi.size()-1) << endl ;  ; 
+	complex<double> integ = 0. ; 
+	
 	for ( size_t k(0) ; k < psi.size() - 1 ; ++k )	
-	{ integ += ( ( norm(psi[k])*x[k] + norm(psi[k+1])*x[k+1] ) ) ; } // norm retourne le module au carré // cout << "k : " << k << endl ;
+	{ integ += ( ( norm(psi[k])*x[k] + norm(psi[k+1])*x[k+1] ) ) ; } // norm retourne le module au carré // cout << "k : " << k << endl ; 
 	integ *= (dx/2.) ; // on met dx/2 en évidence dans la somme 
 	
-    return integ;
+    return real(integ);
 }
 
 /// TODO calculer x.^2 moyenne
@@ -124,8 +125,8 @@ double pmoy(vec_cmplx const & psi , double dx , double hbar)
 	for ( size_t k(1) ; k < psi.size() - 2 ; ++k ) // on ne prend pas les valeurs aux bords donc 1 et -3 
 	{ integ += ( conj(psi[k]) * (psi[k+1] - psi[k-1]) / (2.*dx) + conj(psi[k+1]) * (psi[k+2] - psi[k]) / (2.*dx) ) ;}
 	
-	integ += conj(psi[0])*( psi[0] + psi[1] ) / dx +  conj(psi[1])*(psi[0]+psi[2]) / (2.*dx) ; // bord gauche (différences finies à gauche) page 200 
-	integ += conj(psi[N])*( psi[N] + psi[N-1]) / dx +  conj(psi[N-1])*( psi[N]+ psi[N-2] ) / (2.*dx) ; // bord droit  (différences finies à droite) page 200
+	integ += conj(psi[0])*( - psi[0] + psi[1] ) / dx +  conj(psi[1])*(psi[0] - psi[2]) / (2.*dx) ; // bord gauche (différences finies à gauche) page 200 
+	integ += conj(psi[N])*( psi[N] - psi[N-1]) / dx +  conj(psi[N-1])*( psi[N] - psi[N-2] ) / (2.*dx) ; // bord droit  (différences finies à droite) page 200
 	
 	integ *= ( - complex_i * hbar * dx/2. ) ; // on met ihdx/2 en évidence dans la somme (trapèze)
 	
@@ -253,10 +254,10 @@ main(int argc, char** argv)
     {
 		complex<double> bi = complex_i * dt * V(xa,xL,xR,xb,m,om0,x[i],V0,PI) / (2.*hbar) ; 
 		
-		if ( i == 0 or i == Npoints-1){ dH[i] = 1. ; }
+		if ( i == 0 or i == Npoints-1 ){ dH[i] = 1. ; }
         else { dH[i] = 2.*pow(hbar,2) / (2.*m*pow(dx,2)) + V(xa,xL,xR,xb,m,om0,x[i],V0,PI) ; }
-        dA[i] = 1. + a + bi ; 
-        dB[i] = 1. - a - bi ; 
+        dA[i] = 1. + 2.*a + bi ; 
+        dB[i] = 1. - 2.*a - bi ; 
         
     }
     for (int i(0); i < Nintervals; ++i) // Boucle sur les intervalles
