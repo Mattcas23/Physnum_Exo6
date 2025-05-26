@@ -14,20 +14,31 @@ input_filename = 'configuration.in.example'  # Name of the input file
 
 # ------------------------------------- Simulations ----------------------------------- #
 
-#nsteps = np.array([2,3,4,5,6,7,8,9])*200 # valeurs utilisées pour la convergence
-#nx = np.array([2,3,4,5,6,7,8,9])*20 # valeurs utilisées pour la convergence
+#Nintervals = np.array([2e3,2.5e3,3e3,3.5e3,4e3,5e3]) # valeurs utilisées pour la conv nsteps
+#Nsteps = np.ones(len(Nintervals))*800 # valeurs utilisées pour la conv nsteps
 
-#nsteps = np.array([50e3]) # valeurs utilisées pour le tsunami
-#nx = np.array([10000]) # valeurs utilisées pour le tsunami 
+#Nsteps = np.array([2e3,3e3,4e3,5e3,6e3,7e3], dtype = int) # valeurs utilisées pour la conv nx
+#Nintervals = np.ones(len(Nsteps) , dtype = int)*512 # valeurs utilisées pour la conv nx
 
 Nsteps = np.array([800]) 
 Nintervals = np.array([512])
+
+#Nsteps = np.array([800])
+#Nintervals = np.array([3000])
 
 paramstr = 'Nsteps'  # Parameter name to scan
 param = Nsteps  # Parameter values to scan
 
 paramstr2 = 'Nintervals'  # Parameter name to scan
 param2 = Nintervals  # Parameter values to scan
+
+
+
+paramstr3 = "psi_off"
+param3 = 0 # false => on écrit le fichier psi2 
+if len(Nintervals) > 1 : # pour le test de convergence, on écrit pas les valeurs de psi car trop volumineux
+    param3 = 1 # true => on écrit pas dans le fichier psi2 
+    
 
 nsimul = len(Nsteps)
 
@@ -38,7 +49,7 @@ for i in range(nsimul):
     output_file = f"{paramstr}={param[i]}_{paramstr2}={param2[i]}.out"
     outputs.append(output_file)
     cmd = f"{repertoire}{executable} {input_filename} {paramstr}={param[i]:.15g} output={output_file}"
-    cmd = f"{executable} {input_filename} {paramstr}={param[i]:.15g} {paramstr2}={param2[i]:.15g} output={output_file}"
+    cmd = f"{executable} {input_filename} {paramstr}={param[i]:.15g} {paramstr2}={param2[i]:.15g} {paramstr3}={param3:.15g} output={output_file}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
@@ -55,7 +66,7 @@ x = pot[0,:]
 
 w0 = 100.0
 
-def ObsPlot ( nom_obs , analytique = False ) : # plot l'observable correspondante 
+def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondante 
 
     t = obs[:,0] # temps 
     o = np.array([]) # observable 
@@ -88,10 +99,10 @@ def ObsPlot ( nom_obs , analytique = False ) : # plot l'observable correspondan
     plt.figure()
     plt.plot(t,o,color="black", label = "Quantique")
 
-    if (analytique and nom_obs == "xmoy") :
+    if (classique and nom_obs == "xmoy") :
         plt.plot( t ,  np.cos(w0*t) +  np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
         plt.legend()
-    elif (analytique and nom_obs == "pmoy") :
+    elif (classique and nom_obs == "pmoy") :
         plt.plot( t , w0*np.sin(w0*t) - w0*np.cos(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
         plt.legend()
         
@@ -124,6 +135,9 @@ def Incertitude (obs) : # pour vérifier le principe d'incertitude d'Heisenberg
 
 def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle" / "imaginaire"
 
+    if param3 > 0 :
+        ValueError("Nintervals.size > 1 : on écrit pas phi dans le fichier")
+
     t = obs[:,0]
     x = pot[:,0]
 
@@ -150,12 +164,43 @@ def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle
     plt.ylabel("Temps [s]", fontsize = fs)
     cbar = plt.colorbar()
     cbar.set_label(leg, fontsize = fs)
+
+def Convergence ( order = 1 , nx = False ) :
+
+    xfin = []
+
+    xlab = f"$(\\Delta t)^{order}$" # Label x
+    titr = f"$n_x = {Nintervals[0]}$" # titre du graphe 
+
+    if nx :
+        
+        xlab = f"$(\\Delta x)^{order}$" # Label x
+        titr = "$n_{steps} = $" + f"{Nsteps[0]}" # titre du graphe 
+
+    for i in range(nsimul) :
+        
+        obser = np.loadtxt(outputs[i]+ "_obs.out")
+        xmoye = obser[:,4]
+        xfin.append(xmoye[-1])
+
+    plt.figure()
+    plt.title(titr)
+    plt.xlabel(xlab, fontsize = fs)
+    plt.ylabel("$x_{moy}(t)$",fontsize = fs)
+    
+    if nx :
+        plt.plot(pow(1/Nintervals,order),xfin,"k+-")
+    else :
+        plt.plot(pow(1/Nsteps,order),xfin,"k+-")
+
     
 
-ObsPlot("pmoy", True)
-Incertitude(obs)
+ObsPlot("E")    
+#Convergence(1,True)
+ObsPlot("pmoy")
+#Incertitude(obs)
 #Vplot(pot)
-ColorPlot(obs,psi2,pot,"reelle")
-ObsPlot("xmoy",True)
+ColorPlot(obs,psi2,pot)
+#ObsPlot("xmoy",True)
 plt.show()
 
