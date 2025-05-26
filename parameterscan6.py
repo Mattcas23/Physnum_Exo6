@@ -14,14 +14,14 @@ input_filename = 'configuration.in.example'  # Name of the input file
 
 # ------------------------------------- Simulations ----------------------------------- #
 
-#Nintervals = np.array([2e3,2.5e3,3e3,3.5e3,4e3,5e3]) # valeurs utilisées pour la conv nsteps
-#Nsteps = np.ones(len(Nintervals))*800 # valeurs utilisées pour la conv nsteps
+Nintervals = np.array([512,800,1000,1500,1700,1800,2000]) # valeurs utilisées pour la conv nsteps
+Nsteps = np.ones(len(Nintervals),dtype = int)*800 # valeurs utilisées pour la conv nsteps
 
 #Nsteps = np.array([6e3,7e3,8e3,9e3,10e3], dtype = int) # valeurs utilisées pour la conv nx
 #Nintervals = np.ones(len(Nsteps) , dtype = int)*512 # valeurs utilisées pour la conv nx
 
-Nsteps = np.array([800]) 
-Nintervals = np.array([512])
+#Nsteps = np.array([800]) 
+#Nintervals = np.array([512])
 
 #Nsteps = np.array([3000])
 #Nintervals = np.array([512])
@@ -101,7 +101,7 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
     plt.figure()
     plt.plot(t,o,color="black", label = "Quantique")
 
-
+    Emean = np.mean(obs[:,3]) # pour l'oscillateur classique  
 
     if (classique and nom_obs == "xmoy") :
         plt.plot( t , x0*np.cos(w0*t) +  (p0/w0)*np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
@@ -184,6 +184,12 @@ def Convergence ( order = 1 , nx = False ) :
     for i in range(nsimul) :
         
         obser = np.loadtxt(outputs[i]+ "_obs.out")
+        tobs = obser[:,0]
+        tfin = tobs[-1]
+
+        if ( tfin < 0.08 ) :
+            ValueError(f"La simulation {outputs[i]} ne se termine pas au temps prévu tfin = {tfin} (voir mesh error), le test de convergence sera pas correct")
+                
         xmoye = obser[:,4]
         xfin.append(xmoye[-1])
 
@@ -200,12 +206,12 @@ def Convergence ( order = 1 , nx = False ) :
     
 
 ObsPlot("E")    
-#Convergence(1,False)
+Convergence(1,True)
 ObsPlot("pmoy", True)
 ObsPlot("xmoy", True)
 #Incertitude(obs)
 #Vplot(pot)
-ColorPlot(obs,psi2,pot)
+#ColorPlot(obs,psi2,pot)
 #ObsPlot("xmoy",True)
 plt.show()
 
