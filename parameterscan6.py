@@ -17,14 +17,14 @@ input_filename = 'configuration.in.example'  # Name of the input file
 #Nintervals = np.array([2e3,2.5e3,3e3,3.5e3,4e3,5e3]) # valeurs utilisées pour la conv nsteps
 #Nsteps = np.ones(len(Nintervals))*800 # valeurs utilisées pour la conv nsteps
 
-#Nsteps = np.array([2e3,3e3,4e3,5e3,6e3,7e3], dtype = int) # valeurs utilisées pour la conv nx
+#Nsteps = np.array([6e3,7e3,8e3,9e3,10e3], dtype = int) # valeurs utilisées pour la conv nx
 #Nintervals = np.ones(len(Nsteps) , dtype = int)*512 # valeurs utilisées pour la conv nx
 
 Nsteps = np.array([800]) 
 Nintervals = np.array([512])
 
-#Nsteps = np.array([800])
-#Nintervals = np.array([3000])
+#Nsteps = np.array([3000])
+#Nintervals = np.array([512])
 
 paramstr = 'Nsteps'  # Parameter name to scan
 param = Nsteps  # Parameter values to scan
@@ -65,6 +65,8 @@ t = obs[0,:]
 x = pot[0,:]
 
 w0 = 100.0
+x0 = -0.5
+p0 = 1.0 # changer
 
 def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondante 
 
@@ -79,7 +81,7 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
         ylab = "$P_{droite}$"
         o = obs[:,2]       
     elif ( nom_obs == "E") :
-        ylab = "$E$"
+        ylab = "$E$ [J]"
         o = obs[:,3]        
     elif ( nom_obs == "xmoy") : 
         ylab = "$x_{moy}(t)$"
@@ -99,11 +101,13 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
     plt.figure()
     plt.plot(t,o,color="black", label = "Quantique")
 
+
+
     if (classique and nom_obs == "xmoy") :
-        plt.plot( t ,  np.cos(w0*t) +  np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
+        plt.plot( t , x0*np.cos(w0*t) +  (p0/w0)*np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
         plt.legend()
     elif (classique and nom_obs == "pmoy") :
-        plt.plot( t , w0*np.sin(w0*t) - w0*np.cos(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
+        plt.plot( t , - x0*w0*np.sin(w0*t) + p0*np.cos(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
         plt.legend()
         
     plt.xlabel("Temps [s]", fontsize = fs)
@@ -196,8 +200,9 @@ def Convergence ( order = 1 , nx = False ) :
     
 
 ObsPlot("E")    
-#Convergence(1,True)
-ObsPlot("pmoy")
+#Convergence(1,False)
+ObsPlot("pmoy", True)
+ObsPlot("xmoy", True)
 #Incertitude(obs)
 #Vplot(pot)
 ColorPlot(obs,psi2,pot)
