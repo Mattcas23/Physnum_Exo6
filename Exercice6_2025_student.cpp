@@ -74,26 +74,15 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E( vec_cmplx const & psi,vec_cmplx const &  H,double t, vector<double> const & x, double dx, size_t i, size_t j){
-
-// Define complex type for wave function
-using cdouble = complex<double>;
-
-// Function to numerically integrate expected value of H
-
+double E( vec_cmplx const & psi, vec_cmplx const &  dH, vec_cmplx const & aH , vec_cmplx const &  cH , double dx, size_t i, size_t j)
 {
-    double result = 0.0;
-
-    for (size_t k(i) ; k< j-1; ++k) {
-        cdouble psi_val = psi[k];
-        cdouble psi_conj = conj(psi_val);
-        cdouble h_val = H[k];
-
-        result += real(psi_conj * h_val * psi_val) * dx;
-    }
-
-    return result;
-}
+	complex<double> integ = 0. ; 
+	
+	for ( size_t k(i) ; k < j -	1 ; ++k )
+	{ integ += ( norm(psi[k])*(dH[k]+cH[k]+aH[k]) + norm(psi[k+1])*(dH[k+1]+cH[k+1]+aH[k+1]) )  ; }
+	
+	return real(integ) ; 
+	
 }
 
 /// TODO calculer xmoyenne
@@ -199,6 +188,7 @@ main(int argc, char** argv)
     double V0 = configFile.get<double>("V0");
     double om0 = configFile.get<double>("om0");
     double n  = configFile.get<int>("n"); // Read mode number as integer, convert to double
+    bool   psi_off = configFile.get<bool>("psi_off") ; 
 
     double x0 = configFile.get<double>("x0");
     double sigma0 = configFile.get<double>("sigma_norm") * (xR - xL);
@@ -311,7 +301,7 @@ main(int argc, char** argv)
     /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     ///       en accord avec la façon dont vous les aurez programmés plus haut
     fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices ( xa et 0 pour le premier prob et o et xb pour le deuxiüme prob ) 
-                << " " << E(psi,dH,t,x,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
+                << " " << E(psi,dH,aH,cH,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
                 << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     // Boucle temporelle :    
@@ -331,16 +321,19 @@ main(int argc, char** argv)
         t += dt;
 
         // t0 writing
+        if ( not psi_off )  // pour le test de convergence on écrit pas psi car trop volumineux. 
+        {
         for (int i(0); i < Npoints; ++i){
             fichier_psi << abs(psi[i])  << " " << real(psi[i]) << " "  << imag(psi[i]) << " ";
             }
+        }
         fichier_psi << endl;
 
         // Ecriture des observables :
 	/// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
 	///       en accord avec la façon dont vous les aurez programmés plus haut
         fichier_observables << t << " " << prob(psi,dx,0,psi.size()) << " " << prob(psi,dx,0,psi.size()) // Attenzione ! Controllare gli indici ! 
-                    << " " << E(psi,dH,t,x,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
+                    << " " << E(psi,dH,aH,cH,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
                     << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     } // Fin de la boucle temporelle
