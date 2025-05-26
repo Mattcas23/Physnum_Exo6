@@ -73,23 +73,36 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
     return sqrt(integ); // l'intégrale donne la probabilité au carré 
 }
 
-/// TODO calculer l'energie
-double E( vec_cmplx const & psi, vec_cmplx const &  dH, vec_cmplx const & aH , vec_cmplx const &  cH , double dx)
-{
-	complex<double> integ = 0. ; 
-	
-	integ += conj(psi[0]) * ( cH[0]*psi[1] + dH[0]*psi[0] ) + conj(psi[1]) * ( cH[1]*psi[2] + dH[1]*psi[1] + aH[0]*psi[0] ) ; // bord gauche 
-	integ += conj(psi[-1]) * ( cH[-1]*psi[-2] + dH[-1]*psi[-1] ) + conj(psi[-2]) * ( cH[-1]*psi[-1] + dH[-2]*psi[-2] + aH[-2]*psi[-3] ) ; // bord droit 
+double integrate(vector<double> const& vec, double const& dx) {
+    // Intégration numérique pour un vecteur de nombres complexes
+    double integral = 0.0;
+    for (size_t i = 0; i < vec.size() - 1; ++i) {
+        // Utilisation de la règle du trapèze pour l'intégration
+        integral += (vec[i] + vec[i + 1]) * dx / 2.0;
+    }
+    return integral;
+}
 
-	for ( size_t i(1) ; i < psi.size() - 3 ; ++i ) // 
-	{ 
-		complex<double> fi0 = conj(psi[i]) * ( aH[i]*psi[i-1] + dH[i]*psi[i] + cH[i]*psi[i+1] ) ; // f(x_i)
-		complex<double> fi1 = conj(psi[i+1]) * ( aH[i+1]*psi[i] + dH[i+1]*psi[i+1] + cH[i+1]*psi[i+2] ) ; // f(x_i+1)
-		integ += ( fi0 + fi1 ) ; 
-	}
+double E(vec_cmplx const& psi, vec_cmplx const& dH, vec_cmplx const& aH, vec_cmplx const& cH, double const& dx) {
 
-	integ*=(dx/2.) ; 
-	return real(integ) ; 
+    // Calculate H * psi
+    vec_cmplx H_psi = vec_cmplx(psi.size(), 0.0);
+    H_psi[0] = cH[0]*psi[1] + dH[0]*psi[0] ; 
+    
+    for (int i = 1 ; i < psi.size() - 1; i++) { 
+	    H_psi[i] = cH[i] * psi[i + 1] + dH[i] * psi[i] + aH[i-1] * psi[i - 1]; 
+    }
+
+    // calculate psi_conj * H * psi
+    vector<double> integrand(psi.size(), 0.0);
+    for (int i = 0; i < psi.size(); i++) {
+        integrand[i] = real(conj(psi[i]) * H_psi[i]);
+    }
+
+    // Integrate the result
+    double integral = integrate(integrand, dx);
+
+    return integral; // Return the energy
 }
 
 /// TODO calculer xmoyenne
