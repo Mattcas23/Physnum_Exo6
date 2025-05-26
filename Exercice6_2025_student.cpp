@@ -74,12 +74,18 @@ double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 }
 
 /// TODO calculer l'energie
-double E( vec_cmplx const & psi, vec_cmplx const &  dH, vec_cmplx const & aH , vec_cmplx const &  cH , double dx, size_t i, size_t j)
+double E( vec_cmplx const & psi, vec_cmplx const &  dH, vec_cmplx const & aH , vec_cmplx const &  cH , double dx)
 {
 	complex<double> integ = 0. ; 
-	
-	for ( size_t k(i) ; k < j -	1 ; ++k )
-	{ integ += ( norm(psi[k])*(dH[k]+cH[k]+aH[k]) + norm(psi[k+1])*(dH[k+1]+cH[k+1]+aH[k+1]) )  ; }
+
+	for ( size_t i(1) ; i < psi.size() - 3 ; ++i ) // phi(x0) = phi(Xn) = 0 (conditions aux bords)
+	{ 
+		complex<double> fi0 = conj(psi[i]) * ( aH[i]*psi[i-1] + dH[i]*psi[i] + cH[i]*psi[i+1] ) ; // f(x_i)
+		complex<double> fi1 = conj(psi[i+1]) * ( aH[i+1]*psi[i] + dH[i+1]*psi[i+1] + cH[i+1]*psi[i+2] ) ; // f(x_i+1)
+		integ += ( fi0 + fi1 ) ; 
+	}
+
+	integ*=(dx/2.) ; 
 	
 	return real(integ) ; 
 	
@@ -301,7 +307,7 @@ main(int argc, char** argv)
     /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     ///       en accord avec la façon dont vous les aurez programmés plus haut
     fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices ( xa et 0 pour le premier prob et o et xb pour le deuxiüme prob ) 
-                << " " << E(psi,dH,aH,cH,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
+                << " " << E(psi,dH,aH,cH,dx) << " " << xmoy (psi,x,dx) << " "  
                 << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     // Boucle temporelle :    
@@ -333,7 +339,7 @@ main(int argc, char** argv)
 	/// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
 	///       en accord avec la façon dont vous les aurez programmés plus haut
         fichier_observables << t << " " << prob(psi,dx,0,psi.size()) << " " << prob(psi,dx,0,psi.size()) // Attenzione ! Controllare gli indici ! 
-                    << " " << E(psi,dH,aH,cH,dx,0,x.size()-1) << " " << xmoy (psi,x,dx) << " "  
+                    << " " << E(psi,dH,aH,cH,dx) << " " << xmoy (psi,x,dx) << " "  
                     << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     } // Fin de la boucle temporelle
