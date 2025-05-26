@@ -143,7 +143,7 @@ double pmoy(vec_cmplx const & psi , double dx , double hbar)
 	
 	integ *= ( - complex_i * hbar * dx/2. ) ; // on met ihdx/2 en évidence dans la somme (trapèze)
 	
-    return abs(integ);
+    return real(integ);
 }
 
 /// TODO calculer p.^2 moyenne
@@ -357,7 +357,7 @@ main(int argc, char** argv)
                     << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
     } // Fin de la boucle temporelle
-
+	
 
 
 
