@@ -17,7 +17,7 @@ input_filename = 'configuration.in.example'  # Name of the input file
 Nintervals = np.array([512,800,1000,1500,1700,1800,2000]) # valeurs utilisées pour la conv nsteps
 Nsteps = np.ones(len(Nintervals),dtype = int)*800 # valeurs utilisées pour la conv nsteps
 
-#Nsteps = np.array([6e3,7e3,8e3,9e3,10e3], dtype = int) # valeurs utilisées pour la conv nx
+#Nsteps = np.array([800,1000,1200,1500,1700,2000], dtype = int) # valeurs utilisées pour la conv nx
 #Nintervals = np.ones(len(Nsteps) , dtype = int)*512 # valeurs utilisées pour la conv nx
 
 #Nsteps = np.array([800]) 
@@ -169,14 +169,14 @@ def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle
     cbar = plt.colorbar()
     cbar.set_label(leg, fontsize = fs)
 
-def Convergence ( order = 1 , nx = False ) :
+def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Nsteps fixe et conv en ordre pour Nintervals fixe 
 
     xfin = []
 
     xlab = f"$(\\Delta t)^{order}$" # Label x
     titr = f"$n_x = {Nintervals[0]}$" # titre du graphe 
 
-    if nx :
+    if Nsteps_fixe :
         
         xlab = f"$(\\Delta x)^{order}$" # Label x
         titr = "$n_{steps} = $" + f"{Nsteps[0]}" # titre du graphe 
@@ -198,7 +198,7 @@ def Convergence ( order = 1 , nx = False ) :
     plt.xlabel(xlab, fontsize = fs)
     plt.ylabel("$x_{moy}(t)$",fontsize = fs)
     
-    if nx :
+    if Nsteps_fixe :
         plt.plot(pow(1/Nintervals,order),xfin,"k+-")
     else :
         plt.plot(pow(1/Nsteps,order),xfin,"k+-")
@@ -206,7 +206,7 @@ def Convergence ( order = 1 , nx = False ) :
     
 
 ObsPlot("E")    
-Convergence(1,True)
+Convergence(2,True)
 ObsPlot("pmoy", True)
 ObsPlot("xmoy", True)
 #Incertitude(obs)
