@@ -65,12 +65,16 @@ double V(double xa, double xL, double xR, double xb, double m, double w0, double
 double prob( vec_cmplx const & psi , double dx , size_t i , size_t j  )
 {
 	double integ = 0. ; 
+	//cout << "i= " << i << endl ; 
+	//cout << "j= " << j << endl ; 
 	
 	for ( size_t k(i) ; k < j - 1 ; ++k )
 	{ integ += ( norm(psi[k]) + norm(psi[k+1]) ); }	
 	integ *= (dx/2.) ; 
 	
-    return sqrt(integ); // l'intégrale donne la probabilité au carré 
+	//cout << integ << endl ; 
+	
+    return integ; // l'intégrale donne la probabilité au carré 
 }
 
 double integrate(vector<double> const& vec, double const& dx) {
@@ -168,7 +172,7 @@ vec_cmplx normalize(vec_cmplx const& psi, double const& dx)
     psi_norm = psi ; 
     
     for ( auto & el : psi_norm ) // on passe par référence 
-    { el /= prob(psi,dx,0,psi.size()) ; }
+    { el /= sqrt(prob(psi,dx,0,psi.size())); }
         
     return psi_norm;
 }
@@ -324,9 +328,9 @@ main(int argc, char** argv)
     size_t pt_milieu (psi.size()/2.) ; // changer : trouver l'indice pour lequel x = 0 
     cout << "pt_milieu" << pt_milieu << " x" << x[pt_milieu] << endl ; 
     
-    fichier_observables << t << " " << prob(psi,dx,0,pt_milieu) << " " << prob(psi,dx,pt_milieu,psi.size()-1) // attention : contrôler tous les indices ( xa et 0 pour le premier prob et o et xb pour le deuxiüme prob ) 
+    fichier_observables << t << " " << prob(psi,dx,0,pt_milieu) << " " << prob(psi,dx,pt_milieu+1,psi.size()) // attention : contrôler tous les indices ( xa et 0 pour le premier prob et o et xb pour le deuxiüme prob ) 
                 << " " << E(psi,dH,aH,cH,dx) << " " << xmoy (psi,x,dx) << " "  
-                << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
+                << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << " " << prob(psi,dx,0,psi.size()) << endl; 
 
     // Boucle temporelle :    
     while (t < tfin) {
@@ -356,9 +360,9 @@ main(int argc, char** argv)
         // Ecriture des observables :
 	/// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
 	///       en accord avec la façon dont vous les aurez programmés plus haut
-        fichier_observables << t << " " << prob(psi,dx,0,pt_milieu) << " " << prob(psi,dx,pt_milieu,psi.size()-1) // Attenzione ! Controllare gli indici ! 
+        fichier_observables << t << " " << prob(psi,dx,0,pt_milieu) << " " << prob(psi,dx,pt_milieu+1,psi.size()) // Attenzione ! Controllare gli indici ! 
                     << " " << E(psi,dH,aH,cH,dx) << " " << xmoy (psi,x,dx) << " "  
-                    << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
+                    << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << " " << prob(psi,dx,0,psi.size()) << endl; 
 
     } // Fin de la boucle temporelle
 	
