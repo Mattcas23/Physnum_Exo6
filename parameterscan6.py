@@ -70,11 +70,42 @@ w0 = 100.0
 x0 = -0.5
 p0 = 1.0 # changer
 
+def ftPlot() : # j'ajouterai ton animation après parce que ça bugait un peu 
+
+    t = obs[:,0]
+
+    plt.ion() # pour faire l'animation visuelle
+
+    modidx = np.arange(start = 0 , stop = psi2.shape[1], step = 3)
+    reeidx = np.arange(start = 1 , stop = psi2.shape[1], step = 3)
+    imaidx = np.arange(start = 2 , stop = psi2.shape[1], step = 3)
+
+    for i in range(t.shape[0]) :
+    
+        mod_a_t = psi2[i,modidx] # module au temps t
+        ree_a_t = psi2[i,reeidx] # partie réelle au temps t 
+        ima_a_t = psi2[i,imaidx] # partie imaginaire au temps t 
+ 
+        plt.plot(x,mod_a_t , color = "black")
+        plt.plot(x,ree_a_t , color = "blue")
+        plt.plot(x,ima_a_t , color = "red")
+        plt.title(f"t = {t[i]}")
+        plt.draw()
+        plt.pause(0.005)
+        plt.close()
+        
+    plt.ioff() # pour arrêter
+
+
 def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondante 
 
     t = obs[:,0] # temps 
-    o = np.array([]) # observable 
+    o = np.array([]) # observable
+    o2 = np.array([]) # autre observable si besoin d'en afficher deux ( prob gauche droite )
+    oo2 = np.array([])
     ylab = "" # ylabel
+    lab1 = "" # label pour la courbe si besoin
+    couleur = "black"
 
     if ( nom_obs == "prob_gauche") :
         ylab = "$P_{x<0}(t)$"
@@ -82,18 +113,27 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
     elif ( nom_obs == "prob_droite") :
         ylab = "$P_{x>0}(t)$"
         o = obs[:,2]
-        #print(o)
+    elif ( nom_obs == "prob_d_g") :
+
+        o = obs[:,1] # prob gauche   
+        o2 = obs[:,2]
+        oo2 = o+o2 # pour vérifier que la somme est bien 1
+        lab1 = "$P_{x<0}(t)$"
+        couleur = "blue"
+    
     elif ( nom_obs == "E") :
         ylab = "$Energie$ [J]"
         o = obs[:,3]        
     elif ( nom_obs == "xmoy") : 
         ylab = "$x_{moy}(t)$"
+        lab1 = "Quantique"
         o = obs[:,4]
     elif ( nom_obs == "x2moy") :
         ylab = "$x_{moy}^2(t)$"
         o = obs[:,5]
     elif ( nom_obs == "pmoy") :
         ylab = "$p_{moy}(t)$"
+        lab1 = "Quantique"
         o = obs[:,6]
     elif ( nom_obs == "p2moy") :
         ylab = "$p_{moy}^2(t)$"
@@ -103,8 +143,12 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
 
     plt.figure()
     #print(o)
-    plt.plot(t,o,color="black", label = "Quantique")
-    #plt.axhline(y=1)
+    plt.plot(t,o,color=couleur, label = lab1)
+
+    if ( nom_obs == "prob_d_g" ) :
+        plt.plot(t,o2,color="red", label = "$P_{x>0}(t)$")
+        plt.plot(t,oo2,color="black")
+        plt.legend()
 
     Emean = np.mean(obs[:,3]) # pour l'oscillateur classique  
 
@@ -211,50 +255,116 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
     else :
         plt.plot(pow(1/Nsteps,order),xfin,"k+-")
 
-def Ptrans ( trans ) :
 
-    V0 = np.array([100,500,1000,2000,3000], dtype = int)
-    param4 = V0
+##def Ptrans ( trans ) :
+##
+##    V0 = np.array([100,500,1000,2000,3000], dtype = int)
+##    param4 = V0
+##    paramstr4 = "V0"
+##
+##    nsimul2 = len(V0)
+##
+##    paramstr3 = "psi_off"
+##    param3 = 1 
+##    # Simulations
+##    outputs2 = []  # List to store output file names
+##    for i in range(nsimul2):
+##        output_file = f"{paramstr4}={param4[i]}.out"
+##        outputs2.append(output_file)
+##        cmd = f"{executable} {input_filename} {paramstr3}={param3:.15g} {paramstr4}={param4[i]:.15g} output={output_file}"
+##        print(cmd)
+##        subprocess.run(cmd, shell=True)
+##        print('Done.')
+##
+##    EV0s  = [] # <E>/V0
+##    Ptrans = []
+##    
+##    for i in range(nsimul2) :
+##
+##        obsV0s = np.loadtxt(outputs2[i]+ "_obs.out")
+##        EV0s.append(V0[i] / np.mean(obsV0s[:,3]))
+##        Pdroite = obsV0s[:,2]
+##        obs = obsV0s
+##        ObsPlot("prob_d_g")
+##        plt.title(f"V0 = {V0[i]}")
+##        t = obsV0s[:,0]
+##        idxtrans = np.argmax(t >= trans)
+##        print(idxtrans)
+##        Ptrans.append(Pdroite[idxtrans]) # on trouve le premier indice tq t > ttrans
+##
+##    plt.figure()
+##    plt.scatter(EV0s,Ptrans, color = "black" , s = 15)
+##    plt.xlabel("$\\langle E \\rangle / V_0$",fontsize = fs)
+##    plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
+
+
+def Ptrans(trans=0.035, V0_vals=None, save_data=False, fname='Ptrans_data.txt'):
+    if V0_vals is None:
+
+        V0_vals = [50, 100, 200, 300, 400, 500, 800, 1000, 1500, 2000, 3000]
+
     paramstr4 = "V0"
-
-    nsimul2 = len(V0)
-
     paramstr3 = "psi_off"
-    param3 = 0 # false => on écrit pas dans le fichier psi2 
+    param3 = 1 # éviter d’écrire psi2.out, plus léger
 
-    # Simulations
-    outputs2 = []  # List to store output file names
-    for i in range(nsimul2):
-        output_file = f"{paramstr4}={param4[i]}.out"
+    outputs2 = []
+    EV0s, Ptrans_vals = [], []
+
+    for V0 in V0_vals:
+        output_file = f"{paramstr4}={V0}.out"
         outputs2.append(output_file)
-        cmd = f"{executable} {input_filename} {paramstr3}={param3:.15g} {paramstr4}={param4[i]:.15g} output={output_file}"
-        print(cmd)
+
+        cmd = f"{executable} {input_filename} {paramstr3}={param3:.15g} {paramstr4}={V0:.15g} output={output_file}"
+        print(f"Running: {cmd}")
         subprocess.run(cmd, shell=True)
-        print('Done.')
 
-    EV0s  = [] # <E>/V0
-    Ptrans = []
+    try:
+        obs = np.loadtxt(output_file + "_obs.out")
+        Emean = np.mean(obs[:, 3])
+        t = obs[:, 0]
+        P_droite = obs[:, 2]
+
+        # Trouver l’indice où t >= ttrans
+        idx = np.argmax(t >= trans)
+        P_at_trans = P_droite[idx] if idx < len(t) else P_droite[-1]
+
+        EV0s.append(Emean / V0)
+        Ptrans_vals.append(P_at_trans)
+
+    except Exception as e:
+
+        print(f"Erreur de lecture pour V0={V0} : {e}")
+        EV0s.append(np.nan)
+        Ptrans_vals.append(np.nan)
+
+    # Sauvegarde des données
+    if save_data:
+        data = np.column_stack((EV0s, Ptrans_vals))
+        np.savetxt(fname, data, header="Emean/V0 Ptrans")
+
+    # Tracé
+    plt.figure()
+    plt.scatter(EV0s, Ptrans_vals, color="black", s=40, label="Données simulées")
+
+    plt.xlabel("$\\langle E \\rangle / V_0$", fontsize=fs)
+    plt.ylabel("$P_{x>0}(t_{trans})$", fontsize=fs)
+    plt.grid(True, linestyle=':', alpha=0.6)
+    plt.legend()
+    plt.title("Probabilité de transmission à $t_{trans}$")
+
+    Ptrans(trans=0.035, save_data=True)
+         
+#ftPlot()
     
-    for i in range(nsimul2) :
-
-        obsV0s = np.loadtxt(outputs2[i]+ "_obs.out")
-        EV0s.append(V0[i] / np.mean(obsV0s[:,3]))
-        Pdroite = obsV0s[:,2]
-        t = obsV0s[:,0]
-        Ptrans.append(Pdroite[np.argmax(t >= trans)]) # on trouve le premier indice tq t > ttrans
-
-    plt.scatter(EV0s,Ptrans, color = "black" , s = 15)
-    plt.xlabel("$\\langle E \\rangle / V_0$",fontsize = fs)
-    plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
-    
-Ptrans(0.4)
-ObsPlot("E")    
+Ptrans(0.035)
+#ObsPlot("E")    
 #Convergence(2,False)
-ObsPlot("prob_droite")
-ObsPlot("xmoy")
+#ObsPlot("prob_gauche")
+#ObsPlot("prob_droite")
+#ObsPlot("xmoy")
 #Incertitude(obs)
-Vplot(pot)
-ColorPlot(obs,psi2,pot)
+#Vplot(pot)
+#ColorPlot(obs,psi2,pot)
 #ObsPlot("xmoy",True)
 plt.show()
 
