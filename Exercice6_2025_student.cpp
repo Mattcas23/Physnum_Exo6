@@ -320,7 +320,11 @@ main(int argc, char** argv)
     // Ecriture des observables :
     /// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     ///       en accord avec la façon dont vous les aurez programmés plus haut
-    fichier_observables << t << " " << prob(psi,dx,0,psi.size()-1) << " " << prob(psi,dx,0,psi.size()-1) // attention : contrôler tous les indices ( xa et 0 pour le premier prob et o et xb pour le deuxiüme prob ) 
+    
+    size_t pt_milieu (psi.size()/2.) ; // changer : trouver l'indice pour lequel x = 0 
+    cout << "pt_milieu" << pt_milieu << " x" << x[pt_milieu] << endl ; 
+    
+    fichier_observables << t << " " << prob(psi,dx,0,pt_milieu) << " " << prob(psi,dx,pt_milieu,psi.size()-1) // attention : contrôler tous les indices ( xa et 0 pour le premier prob et o et xb pour le deuxiüme prob ) 
                 << " " << E(psi,dH,aH,cH,dx) << " " << xmoy (psi,x,dx) << " "  
                 << x2moy(psi,x,dx) << " " << pmoy (psi,dx,hbar) << " " << p2moy(psi,dx,hbar) << endl; 
 
