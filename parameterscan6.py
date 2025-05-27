@@ -14,14 +14,17 @@ input_filename = 'configuration.in.example'  # Name of the input file
 
 # ------------------------------------- Simulations ----------------------------------- #
 
-Nintervals = np.array([512,800,1000,1500,1700,1800,2000]) # valeurs utilisées pour la conv nsteps
-Nsteps = np.ones(len(Nintervals),dtype = int)*800 # valeurs utilisées pour la conv nsteps
+#Nintervals = np.array([512,800,1000,1500,1700,1800,2000]) # valeurs utilisées pour la conv nsteps
+#Nsteps = np.ones(len(Nintervals),dtype = int)*800 # valeurs utilisées pour la conv nsteps
 
 #Nsteps = np.array([800,1000,1200,1500,1700,2000], dtype = int) # valeurs utilisées pour la conv nx
 #Nintervals = np.ones(len(Nsteps) , dtype = int)*512 # valeurs utilisées pour la conv nx
 
-#Nsteps = np.array([800]) 
-#Nintervals = np.array([512])
+#Nsteps = np.array([1000,1200,1500,1700,2000,3000,4000,5000,6000,7000])
+#Nintervals = np.ones(len(Nsteps) , dtype = int)*512
+
+Nsteps = np.array([800]) 
+Nintervals = np.array([512])
 
 #Nsteps = np.array([3000])
 #Nintervals = np.array([512])
@@ -44,7 +47,6 @@ nsimul = len(Nsteps)
 
 # Simulations
 outputs = []  # List to store output file names
-convergence_list = []
 for i in range(nsimul):
     output_file = f"{paramstr}={param[i]}_{paramstr2}={param2[i]}.out"
     outputs.append(output_file)
@@ -61,12 +63,38 @@ psi2 = np.loadtxt(outputs[-1]+"_psi2.out")
 obs = np.loadtxt(outputs[-1]+ "_obs.out")
 pot = np.loadtxt(outputs[-1]+ "_pot.out")
 
-t = obs[0,:]
-x = pot[0,:]
+t = obs[:,0]
+x = pot[:,0]
 
 w0 = 100.0
 x0 = -0.5
 p0 = 1.0 # changer
+
+def ftPlot() : # j'ajouterai ton animation après parce que ça bugait un peu 
+
+    t = obs[:,0]
+
+    plt.ion() # pour faire l'animation visuelle
+
+    modidx = np.arange(start = 0 , stop = psi2.shape[1], step = 3)
+    reeidx = np.arange(start = 1 , stop = psi2.shape[1], step = 3)
+    imaidx = np.arange(start = 2 , stop = psi2.shape[1], step = 3)
+
+    for i in range(t.shape[0]) :
+    
+        mod_a_t = psi2[i,modidx] # module au temps t
+        ree_a_t = psi2[i,reeidx] # partie réelle au temps t 
+        ima_a_t = psi2[i,imaidx] # partie imaginaire au temps t 
+ 
+        plt.plot(x,mod_a_t , color = "black")
+        plt.plot(x,ree_a_t , color = "blue")
+        plt.plot(x,ima_a_t , color = "red")
+        plt.title(f"t = {t[i]}")
+        plt.draw()
+        plt.pause(0.005)
+        plt.close()
+        
+    plt.ioff() # pour arrêter
 
 
 def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondante 
@@ -76,10 +104,10 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
     ylab = "" # ylabel
 
     if ( nom_obs == "prob_gauche") :
-        ylab = "$P_{gauche}$"
+        ylab = "$P_{x<0}(t)$"
         o = obs[:,1]   
     elif ( nom_obs == "prob_droite") :
-        ylab = "$P_{droite}$"
+        ylab = "$P_{x>0}(t)$"
         o = obs[:,2]
         #print(o)
     elif ( nom_obs == "E") :
@@ -210,8 +238,45 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
     else :
         plt.plot(pow(1/Nsteps,order),xfin,"k+-")
 
+def Ptrans ( trans ) :
+
+    V0 = np.array([100,500,1000,2000,3000], dtype = int)
+    param4 = V0
+    paramstr4 = "V0"
+
+    nsimul2 = len(V0)
+
+    paramstr3 = "psi_off"
+    param3 = 0 # false => on écrit pas dans le fichier psi2 
+
+    # Simulations
+    outputs2 = []  # List to store output file names
+    for i in range(nsimul2):
+        output_file = f"{paramstr4}={param4[i]}.out"
+        outputs2.append(output_file)
+        cmd = f"{executable} {input_filename} {paramstr3}={param3:.15g} {paramstr4}={param4[i]:.15g} output={output_file}"
+        print(cmd)
+        subprocess.run(cmd, shell=True)
+        print('Done.')
+
+    EV0s  = [] # <E>/V0
+    Ptrans = []
     
+    for i in range(nsimul2) :
+
+        obsV0s = np.loadtxt(outputs2[i]+ "_obs.out")
+        EV0s.append(V0[i] / np.mean(obsV0s[:,3]))
+        Pdroite = obsV0s[:,2]
+        t = obsV0s[:,0]
+        Ptrans.append(Pdroite[np.argmax(t >= trans)]) # on trouve le premier indice tq t > ttrans
+
+    plt.scatter(EV0s,Ptrans, color = "black" , s = 15)
+    plt.xlabel("$\\langle E \\rangle / V_0$",fontsize = fs)
+    plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
+    
+            
 #ftPlot()
+Ptrans(0.4)
 ObsPlot("E")    
 #Convergence(2,False)
 ObsPlot("prob_droite")
@@ -221,3 +286,4 @@ Vplot(pot)
 ColorPlot(obs,psi2,pot)
 #ObsPlot("xmoy",True)
 plt.show()
+
