@@ -26,7 +26,7 @@ input_filename = 'configuration.in.example'  # Name of the input file
 Nsteps = np.array([800]) 
 Nintervals = np.array([512])
 
-#Nsteps = np.array([3000])
+#Nsteps = np.array([3000]) 
 #Nintervals = np.array([512])
 
 paramstr = 'Nsteps'  # Parameter name to scan
@@ -136,6 +136,10 @@ def ObsPlot ( nom_obs , classique = False , obs = obs ) : # plot l'observable c
     elif ( nom_obs == "p2moy") :
         ylab = "$p_{moy}^2(t)$"
         o = obs[:,7]
+    elif( nom_obs == "ptot") :# probabilité totale
+        ylab = "$P_{totale}(t)$"
+        o = obs[:,-1]
+    
     else :
         ValueError("Le nom de l'observable doit être : E , xmoy , x2moy , pmoy , p2moy ... ")
 
@@ -144,7 +148,8 @@ def ObsPlot ( nom_obs , classique = False , obs = obs ) : # plot l'observable c
 
     if ( nom_obs == "prob_d_g" ) :
         plt.plot(t,o2,color="red", label = "$P_{x>0}(t)$")
-        plt.plot(t,oo2,color="black")
+        #plt.plot(t,oo2,color="black" , label = "$P_{x>0}(t) + P_{x<0}(t)$")
+        #plt.plot(t,obs[:,-1], color = "magenta" , linestyle = "dashed" , label = "$P_{tot}$")
         plt.legend(fontsize = fs - 2)
 
     Emean = np.mean(obs[:,3]) # pour l'oscillateur classique  
@@ -184,7 +189,7 @@ def Incertitude (obs) : # pour vérifier le principe d'incertitude d'Heisenberg
     plt.axhline(y = 0.5, color = "red", label = "$y = \\frac{\\hbar}{2}$") # ici on a pris des unités normalisées donc hbar = 1 (voir exercice p1)
     plt.xlabel("Temps [s]", fontsize = fs)
     plt.ylabel("$\\langle \\Delta x \\rangle \\langle \\Delta p \\rangle $", fontsize = fs)
-    plt.legend()
+    plt.legend(fontsize = fs - 2)
 
 def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle" / "imaginaire"
 
@@ -212,7 +217,7 @@ def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle
     psi_val = psi[:,idx]
     
     plt.figure()
-    plt.pcolor(x,t,psi_val)
+    plt.pcolor(x,t,psi_val, edgecolors = 'face' , alpha = 1)
     plt.xlabel("x [m]", fontsize = fs)
     plt.ylabel("Temps [s]", fontsize = fs)
     cbar = plt.colorbar()
@@ -245,7 +250,7 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
     plt.figure()
     plt.title(titr)
     plt.xlabel(xlab, fontsize = fs)
-    plt.ylabel("$x_{moy}(t)$",fontsize = fs)
+    plt.ylabel("$x_{moy}(t_{fin})$",fontsize = fs)
     
     if Nsteps_fixe :
         plt.plot(pow(1/Nintervals,order),xfin,"k+-")
@@ -253,7 +258,7 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
         plt.plot(pow(1/Nsteps,order),xfin,"k+-")
 
 
-def Ptrans ( trans ) :
+def Ptrans ( trans = 0.035 ) :
 
     V0 = np.array([100,500,1000,2000,3000], dtype = int)
     param4 = V0
@@ -280,16 +285,12 @@ def Ptrans ( trans ) :
 
         obsV0s = np.loadtxt(outputs2[i]+ "_obs.out")
         Emean = np.mean(obsV0s[:,3])
-        #print(Emean)
         EV0s.append((Emean / V0[i]))
         Pdroite = obsV0s[:,2]
-        ObsPlot("prob_d_g" , obs = obsV0s)
-        plt.title(f"$V_0 = {V0[i]}$")
+        #ObsPlot("prob_d_g" , obs = obsV0s)
+        #plt.title(f"$V_0 = {V0[i]}$")
         t = obsV0s[:,0]
         idxtrans = np.argmax(t >= trans)
-        #print(idxtrans)
-        print(V0[i] / Emean)
-        print(Pdroite[idxtrans])
         Ptrans.append(Pdroite[idxtrans]) # on trouve le premier indice tq t > ttrans
 
     plt.figure()
@@ -298,16 +299,15 @@ def Ptrans ( trans ) :
     plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
 
 
-#ftPlot()
-Ptrans(0.035)
-#ObsPlot("prob_d_g")    
-#Convergence(2,False)
-#ObsPlot("prob_gauche")
-#ObsPlot("prob_droite")
-#ObsPlot("xmoy")
-#Incertitude(obs)
+#ObsPlot("pmoy" , True)
+#ObsPlot("xmoy" , True)
+#ObsPlot("ptot" , True)
+ColorPlot(obs,psi2,pot, partie = "module")
+#ColorPlot(obs,psi2,pot, partie = "reelle")
+#Incertitude(obs) 
 Vplot(pot)
-#ColorPlot(obs,psi2,pot)
-#ObsPlot("xmoy",True)
+ObsPlot("prob_d_g" , True)
+#Convergence( order = 2 , Nsteps_fixe = True )
+
 plt.show()
 
