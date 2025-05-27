@@ -97,7 +97,7 @@ def ftPlot() : # j'ajouterai ton animation après parce que ça bugait un peu
     plt.ioff() # pour arrêter
 
 
-def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondante 
+def ObsPlot ( nom_obs , classique = False , obs = obs ) : # plot l'observable correspondante 
 
     t = obs[:,0] # temps 
     o = np.array([]) # observable
@@ -113,14 +113,12 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
     elif ( nom_obs == "prob_droite") :
         ylab = "$P_{x>0}(t)$"
         o = obs[:,2]
-    elif ( nom_obs == "prob_d_g") :
-
+    elif ( nom_obs == "prob_d_g") : # plot la prob d'être à gauche et celle d'être à droite sur le même graphe ainsi que leur somme 
         o = obs[:,1] # prob gauche   
-        o2 = obs[:,2]
+        o2 = obs[:,2] # prob droite
         oo2 = o+o2 # pour vérifier que la somme est bien 1
         lab1 = "$P_{x<0}(t)$"
         couleur = "blue"
-    
     elif ( nom_obs == "E") :
         ylab = "$Energie$ [J]"
         o = obs[:,3]        
@@ -139,25 +137,24 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
         ylab = "$p_{moy}^2(t)$"
         o = obs[:,7]
     else :
-        ValueError("Le nom de l'observable doit être : E , xmoy , x2moy , pmoy , p2moy ")
+        ValueError("Le nom de l'observable doit être : E , xmoy , x2moy , pmoy , p2moy ... ")
 
     plt.figure()
-    #print(o)
     plt.plot(t,o,color=couleur, label = lab1)
 
     if ( nom_obs == "prob_d_g" ) :
         plt.plot(t,o2,color="red", label = "$P_{x>0}(t)$")
         plt.plot(t,oo2,color="black")
-        plt.legend()
+        plt.legend(fontsize = fs - 2)
 
     Emean = np.mean(obs[:,3]) # pour l'oscillateur classique  
 
     if (classique and nom_obs == "xmoy") :
         plt.plot( t , x0*np.cos(w0*t) +  (p0/w0)*np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
-        plt.legend()
+        plt.legend(fontsize = fs - 2)
     elif (classique and nom_obs == "pmoy") :
         plt.plot( t , - x0*w0*np.sin(w0*t) + p0*np.cos(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
-        plt.legend()
+        plt.legend(fontsize = fs - 2)
         
     plt.xlabel("Temps [s]", fontsize = fs)
     plt.ylabel(ylab , fontsize = fs)        
@@ -256,114 +253,60 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
         plt.plot(pow(1/Nsteps,order),xfin,"k+-")
 
 
-##def Ptrans ( trans ) :
-##
-##    V0 = np.array([100,500,1000,2000,3000], dtype = int)
-##    param4 = V0
-##    paramstr4 = "V0"
-##
-##    nsimul2 = len(V0)
-##
-##    paramstr3 = "psi_off"
-##    param3 = 1 
-##    # Simulations
-##    outputs2 = []  # List to store output file names
-##    for i in range(nsimul2):
-##        output_file = f"{paramstr4}={param4[i]}.out"
-##        outputs2.append(output_file)
-##        cmd = f"{executable} {input_filename} {paramstr3}={param3:.15g} {paramstr4}={param4[i]:.15g} output={output_file}"
-##        print(cmd)
-##        subprocess.run(cmd, shell=True)
-##        print('Done.')
-##
-##    EV0s  = [] # <E>/V0
-##    Ptrans = []
-##    
-##    for i in range(nsimul2) :
-##
-##        obsV0s = np.loadtxt(outputs2[i]+ "_obs.out")
-##        EV0s.append(V0[i] / np.mean(obsV0s[:,3]))
-##        Pdroite = obsV0s[:,2]
-##        obs = obsV0s
-##        ObsPlot("prob_d_g")
-##        plt.title(f"V0 = {V0[i]}")
-##        t = obsV0s[:,0]
-##        idxtrans = np.argmax(t >= trans)
-##        print(idxtrans)
-##        Ptrans.append(Pdroite[idxtrans]) # on trouve le premier indice tq t > ttrans
-##
-##    plt.figure()
-##    plt.scatter(EV0s,Ptrans, color = "black" , s = 15)
-##    plt.xlabel("$\\langle E \\rangle / V_0$",fontsize = fs)
-##    plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
+def Ptrans ( trans ) :
 
-
-def Ptrans(trans=0.035, V0_vals=None, save_data=False, fname='Ptrans_data.txt'):
-    if V0_vals is None:
-
-        V0_vals = [50, 100, 200, 300, 400, 500, 800, 1000, 1500, 2000, 3000]
-
+    V0 = np.array([100,500,1000,2000,3000], dtype = int)
+    param4 = V0
     paramstr4 = "V0"
+
+    nsimul2 = len(V0)
+
     paramstr3 = "psi_off"
-    param3 = 1 # éviter d’écrire psi2.out, plus léger
-
-    outputs2 = []
-    EV0s, Ptrans_vals = [], []
-
-    for V0 in V0_vals:
-        output_file = f"{paramstr4}={V0}.out"
+    param3 = 1 
+    # Simulations
+    outputs2 = []  # List to store output file names
+    for i in range(nsimul2):
+        output_file = f"{paramstr4}={param4[i]}.out"
         outputs2.append(output_file)
-
-        cmd = f"{executable} {input_filename} {paramstr3}={param3:.15g} {paramstr4}={V0:.15g} output={output_file}"
-        print(f"Running: {cmd}")
+        cmd = f"{executable} {input_filename} {paramstr3}={param3:.15g} {paramstr4}={param4[i]:.15g} output={output_file}"
+        print(cmd)
         subprocess.run(cmd, shell=True)
+        print('Done.')
 
-    try:
-        obs = np.loadtxt(output_file + "_obs.out")
-        Emean = np.mean(obs[:, 3])
-        t = obs[:, 0]
-        P_droite = obs[:, 2]
-
-        # Trouver l’indice où t >= ttrans
-        idx = np.argmax(t >= trans)
-        P_at_trans = P_droite[idx] if idx < len(t) else P_droite[-1]
-
-        EV0s.append(Emean / V0)
-        Ptrans_vals.append(P_at_trans)
-
-    except Exception as e:
-
-        print(f"Erreur de lecture pour V0={V0} : {e}")
-        EV0s.append(np.nan)
-        Ptrans_vals.append(np.nan)
-
-    # Sauvegarde des données
-    if save_data:
-        data = np.column_stack((EV0s, Ptrans_vals))
-        np.savetxt(fname, data, header="Emean/V0 Ptrans")
-
-    # Tracé
-    plt.figure()
-    plt.scatter(EV0s, Ptrans_vals, color="black", s=40, label="Données simulées")
-
-    plt.xlabel("$\\langle E \\rangle / V_0$", fontsize=fs)
-    plt.ylabel("$P_{x>0}(t_{trans})$", fontsize=fs)
-    plt.grid(True, linestyle=':', alpha=0.6)
-    plt.legend()
-    plt.title("Probabilité de transmission à $t_{trans}$")
-
-    Ptrans(trans=0.035, save_data=True)
-         
-#ftPlot()
+    EV0s  = [] # <E>/V0
+    Ptrans = []
     
+    for i in range(nsimul2) :
+
+        obsV0s = np.loadtxt(outputs2[i]+ "_obs.out")
+        Emean = np.mean(obsV0s[:,3])
+        #print(Emean)
+        EV0s.append((Emean / V0[i]))
+        Pdroite = obsV0s[:,2]
+        ObsPlot("prob_d_g" , obs = obsV0s)
+        plt.title(f"$V_0 = {V0[i]}$")
+        t = obsV0s[:,0]
+        idxtrans = np.argmax(t >= trans)
+        #print(idxtrans)
+        print(V0[i] / Emean)
+        print(Pdroite[idxtrans])
+        Ptrans.append(Pdroite[idxtrans]) # on trouve le premier indice tq t > ttrans
+
+    plt.figure()
+    plt.scatter(EV0s,Ptrans, color = "black" , s = 15)
+    plt.xlabel("$\\langle E \\rangle / V_0$",fontsize = fs)
+    plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
+
+
+#ftPlot()
 Ptrans(0.035)
-#ObsPlot("E")    
+#ObsPlot("prob_d_g")    
 #Convergence(2,False)
 #ObsPlot("prob_gauche")
 #ObsPlot("prob_droite")
 #ObsPlot("xmoy")
 #Incertitude(obs)
-#Vplot(pot)
+Vplot(pot)
 #ColorPlot(obs,psi2,pot)
 #ObsPlot("xmoy",True)
 plt.show()
