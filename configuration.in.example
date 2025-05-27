@@ -1,11 +1,11 @@
 % Physique :
 tfin = 0.08
-xL = -1
-xR = 1
+xL = -1.0
+xR = 1.0
 xa = -0.5
 xb = 0.5
 om0 = 100
-V0 = 0
+V0 = 1000.0
 x0 = -0.5
 n = 16
 sigma_norm = 0.04
@@ -14,6 +14,7 @@ sigma_norm = 0.04
 Nsteps = 800
 Nintervals = 512
 output = output
+psi_off = true 
 
 % Printing: set to 0 to reduce printouts
 verbose = 1
