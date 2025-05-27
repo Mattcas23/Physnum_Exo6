@@ -68,6 +68,7 @@ w0 = 100.0
 x0 = -0.5
 p0 = 1.0 # changer
 
+
 def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondante 
 
     t = obs[:,0] # temps 
@@ -79,9 +80,10 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
         o = obs[:,1]   
     elif ( nom_obs == "prob_droite") :
         ylab = "$P_{droite}$"
-        o = obs[:,2]       
+        o = obs[:,2]
+        #print(o)
     elif ( nom_obs == "E") :
-        ylab = "$E$ [J]"
+        ylab = "$Energie$ [J]"
         o = obs[:,3]        
     elif ( nom_obs == "xmoy") : 
         ylab = "$x_{moy}(t)$"
@@ -99,7 +101,9 @@ def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondant
         ValueError("Le nom de l'observable doit être : E , xmoy , x2moy , pmoy , p2moy ")
 
     plt.figure()
+    #print(o)
     plt.plot(t,o,color="black", label = "Quantique")
+    #plt.axhline(y=1)
 
     Emean = np.mean(obs[:,3]) # pour l'oscillateur classique  
 
@@ -117,11 +121,14 @@ def Vplot(pot) :
 
     x = pot[:,0]
     V = pot[:,1]
+    Emoy = np.mean(obs[:,3])
 
     plt.figure()
     plt.plot(x,V,color = "black")
+    plt.axhline(y=Emoy, color = "magenta" , linestyle = "dashed" , label = "y = $\\langle E \\rangle$")
     plt.xlabel("x [m]", fontsize = fs)
-    plt.ylabel("V", fontsize = fs)
+    plt.ylabel("Potentiel [J]", fontsize = fs)
+    plt.legend(fontsize = fs - 2)
 
 def Incertitude (obs) : # pour vérifier le principe d'incertitude d'Heisenberg
 
@@ -169,7 +176,7 @@ def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle
     cbar = plt.colorbar()
     cbar.set_label(leg, fontsize = fs)
 
-def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Nsteps fixe et conv en ordre pour Nintervals fixe 
+def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Nsteps fixe et conv en ordre 2 pour Nintervals fixe 
 
     xfin = []
 
@@ -188,7 +195,7 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
         tfin = tobs[-1]
 
         if ( tfin < 0.08 ) :
-            ValueError(f"La simulation {outputs[i]} ne se termine pas au temps prévu tfin = {tfin} (voir mesh error), le test de convergence sera pas correct")
+            Warning(f"La simulation {outputs[i]} ne se termine pas au temps prévu tfin = {tfin} (voir mesh error), le test de convergence sera pas correct")
                 
         xmoye = obser[:,4]
         xfin.append(xmoye[-1])
@@ -204,14 +211,13 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
         plt.plot(pow(1/Nsteps,order),xfin,"k+-")
 
     
-
+#ftPlot()
 ObsPlot("E")    
-Convergence(2,True)
-ObsPlot("pmoy", True)
-ObsPlot("xmoy", True)
+#Convergence(2,False)
+ObsPlot("prob_droite")
+ObsPlot("xmoy")
 #Incertitude(obs)
-#Vplot(pot)
-#ColorPlot(obs,psi2,pot)
+Vplot(pot)
+ColorPlot(obs,psi2,pot)
 #ObsPlot("xmoy",True)
 plt.show()
-
