@@ -68,7 +68,7 @@ x = pot[:,0]
 
 w0 = 100.0
 x0 = -0.5
-p0 = 1.0 # changer
+p0 = 0.0 # changer
 
 def ftPlot() : # j'ajouterai ton animation après parce que ça bugait un peu 
 
@@ -123,14 +123,14 @@ def ObsPlot ( nom_obs , classique = False , obs = obs ) : # plot l'observable c
         ylab = "$Energie$ [J]"
         o = obs[:,3]        
     elif ( nom_obs == "xmoy") : 
-        ylab = "$x_{moy}(t)$"
+        ylab = "$\\langle x \\rangle (t)$"
         lab1 = "Quantique"
         o = obs[:,4]
     elif ( nom_obs == "x2moy") :
-        ylab = "$x_{moy}^2(t)$"
+        ylab = "$\\langle x^2 \\rangle (t)$"
         o = obs[:,5]
     elif ( nom_obs == "pmoy") :
-        ylab = "$p_{moy}(t)$"
+        ylab = "$\\langle p \\rangle(t)$"
         lab1 = "Quantique"
         o = obs[:,6]
     elif ( nom_obs == "p2moy") :
@@ -155,7 +155,7 @@ def ObsPlot ( nom_obs , classique = False , obs = obs ) : # plot l'observable c
     Emean = np.mean(obs[:,3]) # pour l'oscillateur classique  
 
     if (classique and nom_obs == "xmoy") :
-        plt.plot( t , x0*np.cos(w0*t) +  (p0/w0)*np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
+        plt.plot( t , x0*np.cos(w0*t) + (p0/w0)*np.sin(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" ) # 
         plt.legend(fontsize = fs - 2)
     elif (classique and nom_obs == "pmoy") :
         plt.plot( t , - x0*w0*np.sin(w0*t) + p0*np.cos(w0*t) , color = "red" , label = "Classique" , linestyle = "dashed" )
@@ -217,7 +217,7 @@ def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle
     psi_val = psi[:,idx]
     
     plt.figure()
-    plt.pcolor(x,t,psi_val, edgecolors = 'face' , alpha = 1)
+    plt.pcolor(x,t,psi_val)
     plt.xlabel("x [m]", fontsize = fs)
     plt.ylabel("Temps [s]", fontsize = fs)
     cbar = plt.colorbar()
@@ -250,7 +250,7 @@ def Convergence ( order = 2 , Nsteps_fixe = False ) : # conv en ordre 2 pour Ns
     plt.figure()
     plt.title(titr)
     plt.xlabel(xlab, fontsize = fs)
-    plt.ylabel("$x_{moy}(t_{fin})$",fontsize = fs)
+    plt.ylabel("$ \\langle x \\rangle (t_{fin})$",fontsize = fs)
     
     if Nsteps_fixe :
         plt.plot(pow(1/Nintervals,order),xfin,"k+-")
@@ -298,15 +298,29 @@ def Ptrans ( trans = 0.035 ) :
     plt.xlabel("$\\langle E \\rangle / V_0$",fontsize = fs)
     plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
 
+##def Matteo_Pg_Pd () :     
+##
+##    plt.figure(figsize=(8, 4))
+##    plt.plot(obs[:, 0], obs[:, 1], label="$P_{x<0}(t)$", color="blue")
+##    plt.plot(obs[:, 0], obs[:, 2], label="$P_{x>0}(t)$", color="green")
+##    plt.axvline(x=0.035, linestyle="dashed", color="red", alpha=0.6, label="$t_{trans}$")
+##    plt.xlabel("Temps [s]", fontsize=fs)
+##    plt.ylabel("Probabilité", fontsize=fs)
+##    #plt.title(f"Probabilités: $V_0 = {V0}, E_i = {obs[0,3].round()}$ ", fontsize=fs)
+##    plt.legend()
+##    plt.grid(True, linestyle=":")
+##    plt.tight_layout()    
 
-#ObsPlot("pmoy" , True)
-#ObsPlot("xmoy" , True)
+#Matteo_Pg_Pd ()
+ObsPlot("pmoy" , True)
+ObsPlot("xmoy" , True)
+ObsPlot("E" , True)
 #ObsPlot("ptot" , True)
-ColorPlot(obs,psi2,pot, partie = "module")
+#ColorPlot(obs,psi2,pot, partie = "module")
 #ColorPlot(obs,psi2,pot, partie = "reelle")
 #Incertitude(obs) 
 Vplot(pot)
-ObsPlot("prob_d_g" , True)
+#ObsPlot("prob_d_g" , True)
 #Convergence( order = 2 , Nsteps_fixe = True )
 
 plt.show()
