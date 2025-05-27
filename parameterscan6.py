@@ -70,33 +70,6 @@ w0 = 100.0
 x0 = -0.5
 p0 = 1.0 # changer
 
-def ftPlot() : # j'ajouterai ton animation après parce que ça bugait un peu 
-
-    t = obs[:,0]
-
-    plt.ion() # pour faire l'animation visuelle
-
-    modidx = np.arange(start = 0 , stop = psi2.shape[1], step = 3)
-    reeidx = np.arange(start = 1 , stop = psi2.shape[1], step = 3)
-    imaidx = np.arange(start = 2 , stop = psi2.shape[1], step = 3)
-
-    for i in range(t.shape[0]) :
-    
-        mod_a_t = psi2[i,modidx] # module au temps t
-        ree_a_t = psi2[i,reeidx] # partie réelle au temps t 
-        ima_a_t = psi2[i,imaidx] # partie imaginaire au temps t 
- 
-        plt.plot(x,mod_a_t , color = "black")
-        plt.plot(x,ree_a_t , color = "blue")
-        plt.plot(x,ima_a_t , color = "red")
-        plt.title(f"t = {t[i]}")
-        plt.draw()
-        plt.pause(0.005)
-        plt.close()
-        
-    plt.ioff() # pour arrêter
-
-
 def ObsPlot ( nom_obs , classique = False ) : # plot l'observable correspondante 
 
     t = obs[:,0] # temps 
@@ -274,8 +247,6 @@ def Ptrans ( trans ) :
     plt.xlabel("$\\langle E \\rangle / V_0$",fontsize = fs)
     plt.ylabel("$P_{x>0}(t_{trans})$",fontsize = fs)
     
-            
-#ftPlot()
 Ptrans(0.4)
 ObsPlot("E")    
 #Convergence(2,False)
