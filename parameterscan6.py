@@ -17,7 +17,7 @@ input_filename = 'configuration.in.example'  # Name of the input file
 #Nintervals = np.array([512,800,1000,1500,1700,1800,2000]) # valeurs utilisées pour la conv nsteps
 #Nsteps = np.ones(len(Nintervals),dtype = int)*800 # valeurs utilisées pour la conv nsteps
 
-#Nsteps = np.array([800,1000,1200,1500,1700,2000], dtype = int) # valeurs utilisées pour la conv nx
+#Nsteps = np.array([2000,2500,3000,3500,4000], dtype = int) # valeurs utilisées pour la conv nx
 #Nintervals = np.ones(len(Nsteps) , dtype = int)*512 # valeurs utilisées pour la conv nx
 
 #Nsteps = np.array([1000,1200,1500,1700,2000,3000,4000,5000,6000,7000])
@@ -86,10 +86,11 @@ def ftPlot() : # j'ajouterai ton animation après parce que ça bugait un peu
         ree_a_t = psi2[i,reeidx] # partie réelle au temps t 
         ima_a_t = psi2[i,imaidx] # partie imaginaire au temps t 
  
-        plt.plot(x,mod_a_t , color = "black")
-        plt.plot(x,ree_a_t , color = "blue")
-        plt.plot(x,ima_a_t , color = "red")
+        plt.plot(x,mod_a_t , label = "$|\\psi(x,t)|$" , color = "black")
+        plt.plot(x,ree_a_t , label = "$Re[\\psi(x,t)]$" , color = "blue")
+        plt.plot(x,ima_a_t , label = "$Im[\\psi(x,t)]$" , color = "red")
         plt.title(f"t = {t[i]}")
+        plt.legend(fontsize = fs - 3)
         plt.draw()
         plt.pause(0.005)
         plt.close()
@@ -191,7 +192,7 @@ def Incertitude (obs) : # pour vérifier le principe d'incertitude d'Heisenberg
     plt.ylabel("$\\langle \\Delta x \\rangle \\langle \\Delta p \\rangle $", fontsize = fs)
     plt.legend(fontsize = fs - 2)
 
-def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle" / "imaginaire"
+def ColorPlot (obs,psi,pot, partie = "module" , tlim = 0.03) : # partie = "module" / "reelle" / "imaginaire"
 
     if param3 > 0 :
         ValueError("Nintervals.size > 1 : on écrit pas phi dans le fichier")
@@ -200,7 +201,8 @@ def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle
     x = pot[:,0]
 
     idx = np.array([])
-    leg = ""
+    idxtlim = np.argmax(t >= tlim) # temps limite à afficher 
+    leg = "" # légende pour la colorbar
 
     if ( partie == "module" ) : 
         idx = np.arange(start = 0 , stop = psi.shape[1], step = 3) # on choisit uniquement les indexes correspondant au module (voir c++)
@@ -217,7 +219,18 @@ def ColorPlot (obs,psi,pot, partie = "module" ) : # partie = "module" / "reelle
     psi_val = psi[:,idx]
     
     plt.figure()
-    plt.pcolor(x,t,psi_val)
+    plt.pcolor(x,t[:idxtlim],psi_val[:idxtlim,:])
+    #plt.axvline(x = 0 , color = "white" , linestyle = "dashed")
+    plt.xlabel("x [m]", fontsize = fs)
+    plt.ylabel("Temps [s]", fontsize = fs)
+    cbar = plt.colorbar()
+    cbar.set_label(leg, fontsize = fs)
+    #plt.legend()
+
+    couleurs = ["white","lightgrey","skyblue","royalblue","blue","darkblue","magenta","violet","mediumorchid","darkviolet","indigo","red"]
+
+    plt.figure()
+    plt.contourf(x,t[:idxtlim],psi_val[:idxtlim,:], levels = 10 , colors = couleurs) # colors = ["white","lightblue","lightgreen","yellowgreen","olivedrab","yellow","gold","orange","red", "magenta" , "darkblue"] , linestyles = "solid") # colors = ["white","magenta","blue","yellow","orange","red","green"]
     plt.xlabel("x [m]", fontsize = fs)
     plt.ylabel("Temps [s]", fontsize = fs)
     cbar = plt.colorbar()
@@ -312,16 +325,16 @@ def Ptrans ( trans = 0.035 ) :
 ##    plt.tight_layout()    
 
 #Matteo_Pg_Pd ()
-ObsPlot("pmoy" , True)
-ObsPlot("xmoy" , True)
-ObsPlot("E" , True)
+#ObsPlot("pmoy" , True)
+#ObsPlot("xmoy" , True)
+#ObsPlot("E" , True)
 #ObsPlot("ptot" , True)
-#ColorPlot(obs,psi2,pot, partie = "module")
+ColorPlot(obs,psi2,pot, partie = "module")
 #ColorPlot(obs,psi2,pot, partie = "reelle")
 #Incertitude(obs) 
-Vplot(pot)
+#Vplot(pot)
 #ObsPlot("prob_d_g" , True)
-#Convergence( order = 2 , Nsteps_fixe = True )
+#Convergence( order = 1 , Nsteps_fixe = False )
 
 plt.show()
 
